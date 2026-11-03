@@ -42,6 +42,10 @@ CREATE TABLE IF NOT EXISTS rules (
     UNIQUE (pattern)
 );
 
+CREATE TABLE IF NOT EXISTS seeded_rules (
+    pattern TEXT PRIMARY KEY           -- default rules already offered to this database
+);
+
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY,
     statement_id INTEGER NOT NULL REFERENCES statements(id) ON DELETE CASCADE,

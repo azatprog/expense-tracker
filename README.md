@@ -42,13 +42,18 @@ read; it is shown on the Upload page and the statement is still imported. From t
 1. Each bank-side transaction categorized **Credit Card Payment** is linked to a card account by
    its description: `APPLECARD GSBANK` → Apple Card, `AMERICAN EXPRESS … ACH PMT` → Amex,
    `payment to CRD 5646` → BoA credit card ending 5646.
-2. The payment is matched to the card statement it paid:
-   - **exact**: a statement closed on/before the payment whose balance equals the amount (autopay);
-   - **previous**: else the latest statement that closed within 45 days before the payment;
-   - **estimated**: else the closest uploaded statement (e.g. you paid mid-cycle, or the statement
-     the payment covered isn't uploaded yet).
-3. The payment amount is split across that statement's categories in proportion to their net
-   spending (refunds reduce their category); the shares add up to the exact cents.
+2. Each card is run as a tab, first in, first out: every credit to the card pays off the oldest
+   unpaid charges made on or before it.
+   - Payments printed on the card statement are matched to the bank payment (same amount, within
+     7 days); a bank payment whose card statement isn't uploaded yet still pays what's known.
+   - A refund first pays off the latest unpaid charge in its own category (the purchase it
+     refunds); cashback and other credits pay off the oldest charges like a payment.
+   - What was owed before the earliest uploaded statement is one "Card balance before first
+     statement" charge at the front of the queue.
+3. In the cash-flow view, a bank card payment is replaced by exactly the charges it paid (partly
+   paid charges show the paid part), so a charge is never counted twice, whether the card is paid
+   in full by autopay or ad hoc mid-cycle. Anything a payment covered beyond the uploaded charges
+   shows as "Card charges not uploaded yet".
 
 Payments to cards with no uploaded statements (e.g. Macy's/Citi) stay as one
 "Card payments (no statement)" line.

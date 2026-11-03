@@ -42,10 +42,13 @@ def cents(text: str) -> int:
     return -value if neg else value
 
 
-def printed_total(text: str, label: str) -> int | None:
-    """Absolute cents of the first summary line '<label> <amount>' (label is a regex)."""
-    m = re.search(rf"^{label}\s+({AMOUNT_RE})\s*$", text, re.M)
-    return abs(cents(m.group(1))) if m else None
+def printed_total(text: str, label: str, signed: bool = False) -> int | None:
+    """Cents of the first summary line '<label> <amount> [...]' (label is a regex), absolute unless
+    signed. Two-column layouts can put unrelated text after the amount on the same line."""
+    m = re.search(rf"^{label}\s+({AMOUNT_RE})(?:\s|$)", text, re.M)
+    if not m:
+        return None
+    return cents(m.group(1)) if signed else abs(cents(m.group(1)))
 
 
 def compare_totals(rows: list[tuple[str, int | None, int]]) -> list[str]:
