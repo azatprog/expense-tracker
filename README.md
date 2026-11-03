@@ -16,9 +16,11 @@ Supported statements (type is auto-detected):
 ## Run
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8765
+./run.sh
 ```
+
+The first run creates `.venv` and installs `requirements.txt`. `PORT=9000 ./run.sh` uses another
+port; `./run.sh --reload` restarts on code changes.
 
 Open http://127.0.0.1:8765, upload statements, then pick your income account on **Accounts**
 (the first bank account uploaded is picked automatically).
