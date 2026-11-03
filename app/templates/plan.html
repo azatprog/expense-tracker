@@ -5,14 +5,35 @@
 
 {% macro row(kind, line) %}
 <tr class="line">
-  <td><input name="name" value="{{ line.name if line else '' }}" list="category-names" aria-label="Name" placeholder="e.g. Thanksgiving trip" class="w-name"></td>
+  <td>
+    <div class="name-cell">
+      <button type="button" class="toggle" aria-expanded="false" aria-label="Show categories">▸</button>
+      <input name="name" value="{{ line.name if line else '' }}" aria-label="Name" placeholder="e.g. Thanksgiving trip" class="w-name">
+    </div>
+    <div class="sub linked"></div>
+  </td>
   <td class="num">
     <input type="hidden" name="kind" value="{{ kind }}">
+    <input type="hidden" name="categories" value="{{ (line.categories or [line.name]) | join('|') if line else '' }}">
     <span class="dollar">$</span><input name="amount" value="{{ dollars(line.amount_cents) if line else '' }}" inputmode="decimal" aria-label="Amount" class="w-amount">
   </td>
-  <td class="num sub">{{ line.suggested_cents | money if line and line.suggested_cents is not none else '—' }}</td>
-  {% if p.has_actuals %}<td class="num sub">{{ line.actual_cents | money if line and line.actual_cents is not none else '—' }}</td>{% endif %}
+  <td class="num sub avg"></td>
+  {% if p.has_actuals %}<td class="num sub actual"></td>{% endif %}
   <td><button type="button" class="btn small remove" aria-label="Remove line">✕</button></td>
+</tr>
+<tr class="detail" hidden>
+  <td colspan="{{ 5 if p.has_actuals else 4 }}">
+    <table class="parts">
+      <thead><tr><th>Category</th><th class="num">Avg</th><th class="num">Share of plan</th>
+        {% if p.has_actuals %}<th class="num">Actual</th>{% endif %}<th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <select class="link-cat" aria-label="Link a category">
+      <option value="">+ Link a category…</option>
+      {% for c in categories if c.kind == kind %}<option>{{ c.name }}</option>{% endfor %}
+    </select>
+    <span class="sub">“Share of plan” splits the planned amount in proportion to each category's average.</span>
+  </td>
 </tr>
 {% endmacro %}
 
@@ -23,8 +44,8 @@
     <thead><tr><th>Name</th><th class="num">Planned</th><th class="num">Avg</th>
       {% if p.has_actuals %}<th class="num">Actual</th>{% endif %}<th></th></tr></thead>
     <tbody>{% for line in lines %}{{ row(kind, line) }}{% endfor %}</tbody>
-    <tfoot><tr><th>Total</th><th class="num total">{{ (lines | sum(attribute='amount_cents')) | money }}</th><th></th>
-      {% if p.has_actuals %}<th></th>{% endif %}<th></th></tr></tfoot>
+    <tfoot><tr><th>Total</th><th class="num total">{{ (lines | sum(attribute='amount_cents')) | money }}</th>
+      <th class="num sub avg-total"></th>{% if p.has_actuals %}<th class="num sub actual-total"></th>{% endif %}<th></th></tr></tfoot>
   </table>
   <button type="button" class="btn small add" data-kind="{{ kind }}">+ Add {{ 'income' if kind == 'income' else 'expense' }}</button>
   <template id="row-{{ kind }}">{{ row(kind, none) }}</template>
@@ -39,7 +60,7 @@
         {% for m in months %}<option value="{{ m }}" {{ 'selected' if m == p.month }}>{{ m }}{{ ' (this month)' if m == this_month }}</option>{% endfor %}
       </select>
     </label>
-    <label>Suggest from the last
+    <label>Averages from the last
       <select name="basis" onchange="this.form.submit()">
         {% for b in [3, 6, 12] %}<option value="{{ b }}" {{ 'selected' if b == basis }}>{{ b }} months</option>{% endfor %}
       </select>
@@ -55,9 +76,10 @@
 </section>
 <p class="hint">
   {% if p.saved %}Your saved plan for {{ p.month }}.{% else %}<strong>Not saved yet.</strong> Prefilled with your monthly
-    average{% endif %}{% if p.history %} — “Avg” is the cash-flow average for {{ p.history[0] }} to {{ p.history[-1] }}.{% else %}.{% endif %}
+    average.{% endif %}
+  {% if p.history %}“Avg” is the typical month of {{ p.history[0] }} to {{ p.history[-1] }} for the categories a line is
+    linked to — click ▸ to see and change them.{% endif %}
   {% if p.has_actuals %}“Actual” is what really came in and went out in {{ p.month }} so far.{% endif %}
-  Card payments count by what they bought, like on the dashboard.
 </p>
 
 <form method="post" action="/plan" id="plan-form">
@@ -79,50 +101,11 @@
   <button class="btn small" type="submit">Reset to averages</button>
 </form>
 {% endif %}
-
-<datalist id="category-names">
-  {% for c in categories if c.kind != 'transfer' %}<option value="{{ c.name }}">{% endfor %}
-</datalist>
 {% endblock %}
 
 {% block scripts %}
 <script>
-(() => {
-  const form = document.getElementById('plan-form');
-  const money = (c) => (c < 0 ? '-$' : '$') + (Math.abs(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const cents = (s) => Math.round((parseFloat(String(s).replace(/[$,\s]/g, '')) || 0) * 100);
-
-  function recalc() {
-    const totals = {};
-    form.querySelectorAll('table.plan').forEach((t) => {
-      const sum = [...t.querySelectorAll('input[name=amount]')].reduce((a, i) => a + cents(i.value), 0);
-      totals[t.dataset.kind] = sum;
-      t.querySelector('.total').textContent = money(sum);
-    });
-    const left = (totals.income || 0) - (totals.expense || 0);
-    document.getElementById('t-income').textContent = money(totals.income || 0);
-    document.getElementById('t-expense').textContent = money(totals.expense || 0);
-    const l = document.getElementById('t-left');
-    l.textContent = money(left);
-    l.classList.toggle('neg', left < 0);
-  }
-  const dirty = () => { document.getElementById('dirty').hidden = false; recalc(); };
-
-  form.addEventListener('input', dirty);
-  form.addEventListener('click', (e) => {
-    if (e.target.classList.contains('remove')) { e.target.closest('tr').remove(); dirty(); }
-    if (e.target.classList.contains('add')) {
-      const kind = e.target.dataset.kind;
-      const row = document.getElementById('row-' + kind).content.firstElementChild.cloneNode(true);
-      form.querySelector(`table.plan[data-kind=${kind}] tbody`).appendChild(row);
-      row.querySelector('input[name=name]').focus();
-      dirty();
-    }
-  });
-  window.addEventListener('beforeunload', (e) => {
-    if (!document.getElementById('dirty').hidden) e.preventDefault();
-  });
-  form.addEventListener('submit', () => { document.getElementById('dirty').hidden = true; });
-})();
+  window.PLAN = { typical: {{ p.typical_by | tojson }}, actual: {{ p.actual_by | tojson }}, hasActuals: {{ p.has_actuals | tojson }} };
 </script>
+<script src="{{ static('plan.js') }}"></script>
 {% endblock %}

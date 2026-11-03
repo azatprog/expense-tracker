@@ -29,10 +29,12 @@ def load_month(conn, text, month):
 
 
 @pytest.mark.parametrize("values,expected", [
-    ([100, 100, 100], 100),
-    ([900, 100, 200], 150),     # one-off month left out
-    ([300, 0, 0], 100),         # occasional spending is still averaged
-    ([100, 200], 150),          # too little history to call anything a one-off
+    ([10000, 10000, 10000], 10000),
+    ([870000, 130275, 248751], 189513),       # car down payment month left out
+    ([-1109238, 31179, 28032], 29605.5),      # insurance payout month left out
+    ([30000, 0, 0], 10000),                   # occasional spending is still averaged
+    ([291, 27934, 0], 9408.333333333334),     # mostly-zero category: plain average
+    ([10000, 20000], 15000),                  # too little history to call anything a one-off
 ])
 def test_typical(values, expected):
     assert plan.typical(values) == expected
@@ -53,8 +55,8 @@ def test_suggestions_come_from_previous_months(conn):
 
 def test_save_reload_and_reset(conn):
     load_month(conn, BOA_CHECKING, "2026-10")
-    plan.save(conn, "2026-11", [("income", "Salary", 300000), ("expense", "Rent", 200000),
-                                ("expense", "Thanksgiving trip", 45000), ("expense", "  ", 999)])
+    plan.save(conn, "2026-11", [("income", "Salary", 300000, []), ("expense", "Rent", 200000, []),
+                                ("expense", "Thanksgiving trip", 45000, []), ("expense", "  ", 999, [])])
     p = plan.load(conn, "2026-11")
     assert p.saved
     assert [(line.name, line.amount_cents) for line in p.expenses] == [("Rent", 200000), ("Thanksgiving trip", 45000)]
@@ -67,7 +69,7 @@ def test_save_reload_and_reset(conn):
 
 def test_actuals_show_once_the_month_has_data(conn):
     load_month(conn, BOA_CHECKING, "2026-10")
-    plan.save(conn, "2026-10", [("expense", "Rent", 210000)])
+    plan.save(conn, "2026-10", [("expense", "Rent", 210000, [])])
     p = plan.load(conn, "2026-10")
     assert p.has_actuals
     assert p.expenses[0].actual_cents == 200000
@@ -83,8 +85,32 @@ def test_plan_page_round_trip(tmp_path, monkeypatch):
             "kind": ["income", "expense", "expense"],
             "name": ["Salary", "Rent", "Gifts"],
             "amount": ["11,222", "$2,352.50", "abc"],
+            "categories": ["Salary", "Rent", ""],
         }, follow_redirects=False)
         assert r.status_code == 303
         page = client.get("/plan?month=2026-11").text
         assert "Your saved plan for 2026-11" in page
         assert "$8,869.50" in page  # 11,222 - 2,352.50 - 0
+
+
+
+def test_line_linked_to_several_categories_sums_them(conn):
+    load_month(conn, BOA_CHECKING, "2026-10")
+    # The fixture month has Groceries $20.97 (Costco) and Tolls $10.00 (HCTRA).
+    plan.save(conn, "2026-11", [("expense", "Groceries & road", 5000, ["Groceries", "Tolls"]),
+                                ("expense", "Rent", 200000, [])])
+    p = plan.load(conn, "2026-11", 1)
+    road, rent = p.expenses
+    assert road.categories == ["Groceries", "Tolls"]
+    assert [part.category for part in road.parts] == ["Groceries", "Tolls"]
+    assert road.suggested_cents == 2100 + 1000   # typicals are rounded to whole dollars
+    assert rent.categories == [] and rent.suggested_cents == 200000   # unlinked: matches its own name
+
+
+def test_migration_adds_categories_column_to_old_database(tmp_path):
+    c = db.connect(tmp_path / "old.db")
+    c.execute("CREATE TABLE budget_lines (id INTEGER PRIMARY KEY, month TEXT NOT NULL, kind TEXT NOT NULL,"
+              " name TEXT NOT NULL, amount_cents INTEGER NOT NULL, position INTEGER NOT NULL DEFAULT 0)")
+    c.execute("INSERT INTO budget_lines (month, kind, name, amount_cents) VALUES ('2026-11', 'expense', 'Rent', 1)")
+    db.init(c)
+    assert plan.load(c, "2026-11").expenses[0].categories == []

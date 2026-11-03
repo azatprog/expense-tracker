@@ -159,3 +159,18 @@ def test_disputed_charge_and_its_refund_are_left_out(conn):
         for name, cents in p.allocations:
             allocated[name] = allocated.get(name, 0) + cents
     assert allocated == {"Groceries": 4000, "Subscriptions": 6000}
+
+
+@pytest.mark.parametrize("description,category", [
+    ("CVS/PHARMACY #10752 25151 FULSHEAR GASTON RD RICHMOND TX", "Health"),   # not "MACY"
+    ("MACYS DES:AUTO PYMT ID:722126197060530", "Credit Card Payment"),
+    ("SAMSCLUB 8246 GAS STAFFORD TX", "Fuel"),
+    ("SAMSCLUB #8246 STAFFORD TX", "Groceries"),
+    ("PREMIER DENTAL STUDIO 6940 KATY-GASTON ROAD KATY", "Dental & Orthodontics"),  # not " GAS "
+    ("OBC*INDIGO ORTHODONTIC7623 W GRAND PKWY", "Dental & Orthodontics"),
+])
+def test_rules_match_from_the_start_of_a_word(conn, description, category):
+    from app import categorize
+    ids = categorize.category_ids(conn)
+    got = categorize.categorize(description, -100, False, categorize.load_rules(conn), ids)
+    assert got == ids[category]

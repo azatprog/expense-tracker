@@ -1,5 +1,7 @@
-"""Rule-based categorization: a rule is a case-insensitive substring of the transaction
-description. The highest priority wins, then the longest pattern."""
+"""Rule-based categorization: a rule is a case-insensitive piece of the transaction description
+that starts at the beginning of a word ("MACY" matches "MACYS" but not "PHARMACY"). The highest
+priority wins, then the longest pattern."""
+import re
 import sqlite3
 
 CARD_PAYMENT = "Credit Card Payment"            # bank side: money sent to a card
@@ -68,7 +70,7 @@ RULES = [
     ("AT&T BILL", "Phone & Internet", 0), ("AT&T *PAYMENT", "Phone & Internet", 0),
     # Car
     ("AUTONATION FINANC", "Car Payment", 0), ("MBFS", "Car Payment", 0), ("MERCEDES BENZ", "Car Payment", 0),
-    ("EXXON", "Fuel", 0), ("SHELL", "Fuel", 0), ("CHEVRON", "Fuel", 0), ("BUC-EE", "Fuel", 0), ("PILOT", "Fuel", 0), ("LOVES #", "Fuel", 0),
+    ("EXXON", "Fuel", 0), ("SHELL", "Fuel", 0), ("CHEVRON", "Fuel", 0), ("BUC-EE", "Fuel", 0), ("PILOT", "Fuel", 0), ("LOVES #", "Fuel", 0), (" GAS ", "Fuel", 5),
     ("SUNOCO", "Fuel", 0), ("TEXACO", "Fuel", 0),
     ("CAR WASH", "Car Care", 0), ("DLR*MERCEDESBENZ", "Car Care", 10),
     ("LUBE", "Car Care", 0), ("AUTOZONE", "Car Care", 0), ("PARKING", "Car Care", 0), ("PMUSA", "Car Care", 0),
@@ -116,19 +118,25 @@ def category_ids(conn: sqlite3.Connection) -> dict[str, int]:
     return {r["name"]: r["id"] for r in conn.execute("SELECT id, name FROM categories")}
 
 
-def load_rules(conn: sqlite3.Connection) -> list[tuple[str, int]]:
+def load_rules(conn: sqlite3.Connection) -> list[tuple[re.Pattern, int]]:
     rows = conn.execute("SELECT pattern, category_id, priority FROM rules").fetchall()
     rows = sorted(rows, key=lambda r: (-r["priority"], -len(r["pattern"])))
-    return [(r["pattern"].upper(), r["category_id"]) for r in rows]
+    return [(_compile(r["pattern"]), r["category_id"]) for r in rows]
+
+
+def _compile(pattern: str) -> re.Pattern:
+    text = pattern.upper()
+    # Only a pattern that starts with a letter or digit needs to start a word; " GAS " already does.
+    return re.compile((r"(?<![A-Z0-9])" if text[:1].isalnum() else "") + re.escape(text))
 
 
 def categorize(description: str, amount_cents: int, is_card_payment: bool,
-               rules: list[tuple[str, int]], ids: dict[str, int]) -> int:
+               rules: list[tuple[re.Pattern, int]], ids: dict[str, int]) -> int:
     if is_card_payment:
         return ids[CARD_PAYMENT_RECEIVED]
     text = description.upper()
     for pattern, category_id in rules:
-        if pattern in text:
+        if pattern.search(text):
             return category_id
     return ids["Other Income"] if amount_cents > 0 else ids["Uncategorized"]
 

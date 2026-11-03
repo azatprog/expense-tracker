@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS budget_lines (
     kind TEXT NOT NULL,                -- income | expense
     name TEXT NOT NULL,                -- usually a category name, can be anything
     amount_cents INTEGER NOT NULL,
+    categories TEXT NOT NULL DEFAULT '',  -- linked category names, "|"-separated; empty = same as name
     position INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS ix_budget_month ON budget_lines(month);
@@ -87,5 +88,13 @@ def init(conn: sqlite3.Connection) -> None:
     from . import categorize
 
     conn.executescript(SCHEMA)
+    migrate(conn)
     categorize.seed(conn)
     conn.commit()
+
+
+def migrate(conn: sqlite3.Connection) -> None:
+    """Add columns that newer versions expect to a database created by an older one."""
+    columns = {r["name"] for r in conn.execute("PRAGMA table_info(budget_lines)")}
+    if "categories" not in columns:
+        conn.execute("ALTER TABLE budget_lines ADD COLUMN categories TEXT NOT NULL DEFAULT ''")
