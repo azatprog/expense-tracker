@@ -40,18 +40,23 @@ RULES = [
     ("SAMS CLUB", "Groceries", 0), ("SAMSCLUB", "Groceries", 0),
     ("PHOENICIA", "Groceries", 0), ("GLOBUS MARKET", "Groceries", 0), ("KROGER", "Groceries", 0),
     ("WALMART", "Groceries", 0), ("WM SUPERCENTER", "Groceries", 0), ("WAL-MART", "Groceries", 0),
-    ("FOOD STORE", "Groceries", 0), ("FOOD MART", "Groceries", 0), ("PECAN CREEK FOOD", "Groceries", 0), ("TRADER JOE", "Groceries", 0), ("WHOLE FOODS", "Groceries", 0),
+    ("FOOD STORE", "Groceries", 0), ("FOOD MART", "Groceries", 0), ("PECAN CREEK FOOD", "Groceries", 0),
+    ("ALDI", "Groceries", 0), ("RUSSIAN GENERAL STORE", "Groceries", 0), ("TRADER JOE", "Groceries", 0), ("WHOLE FOODS", "Groceries", 0),
     # Dining
     ("UBER *EATS", "Dining", 5), ("DOORDASH", "Dining", 0), ("TST*", "Dining", 0),
     ("STARBUCKS", "Dining", 0), ("HIBACHI", "Dining", 0), ("HYDERABADI", "Dining", 0),
     ("WAFFLE HOUSE", "Dining", 0), ("DD/BR", "Dining", 0), ("DUNKIN", "Dining", 0), ("BAKERY", "Dining", 0), ("COFFEE", "Dining", 0),
-    ("HAPPY CAKE", "Dining", 0), ("KABAB", "Dining", 0), ("CHURR", "Dining", 0), ("DPMN", "Dining", 0), ("MCDONALD", "Dining", 0), ("CHICK-FIL-A", "Dining", 0),
+    ("HAPPY CAKE", "Dining", 0), ("KABAB", "Dining", 0), ("CHURR", "Dining", 0), ("DPMN", "Dining", 0),
+    ("TURKISH GRILL", "Dining", 0), ("SUSHI", "Dining", 0), ("NAYAX", "Dining", 0), ("365 MARKET", "Dining", 0), ("MCDONALD", "Dining", 0), ("CHICK-FIL-A", "Dining", 0),
     # Shopping
     ("Amazon Prime", "Subscriptions", 10), ("AMAZON", "Amazon", 0), ("AMZN", "Amazon", 0),
     ("T.J. MAXX", "Clothing", 0), ("MARSHALLS", "Clothing", 0), ("ROSS STORE", "Clothing", 0),
     ("BURLINGTON", "Clothing", 0), ("MACY", "Clothing", 0),
     ("DILLARDS", "Clothing", 0), ("SPORTSWEAR", "Clothing", 0),
-    ("House of Sport", "Shopping", 0), ("ETSY", "Shopping", 0), ("FEDEX", "Shopping", 0), ("TARGET", "Shopping", 0),
+    ("OLD NAVY", "Clothing", 0), ("ROSS DRESS", "Clothing", 0), ("SKECHERS", "Clothing", 0),
+    ("House of Sport", "Shopping", 0), ("ETSY", "Shopping", 0), ("FEDEX", "Shopping", 0),
+    ("HOMEGOODS", "Shopping", 0), ("IKEA", "Shopping", 0), ("FIVE BELOW", "Shopping", 0),
+    ("GOODWILL", "Shopping", 0), ("CHRISTMAS VILLAGE", "Shopping", 0), ("TARGET", "Shopping", 0),
     ("Installment: Apple", "Electronics", 10), ("Apple Store", "Electronics", 5), ("AT&T DEVICE", "Electronics", 10),
     # Home & bills
     ("MOVE SALES INC", "Rent", 0), ("Rent-dr", "Rent", 0),
@@ -64,7 +69,7 @@ RULES = [
     ("EXXON", "Fuel", 0), ("SHELL", "Fuel", 0), ("CHEVRON", "Fuel", 0), ("BUC-EE", "Fuel", 0), ("PILOT", "Fuel", 0), ("LOVES #", "Fuel", 0),
     ("SUNOCO", "Fuel", 0), ("TEXACO", "Fuel", 0),
     ("CAR WASH", "Car Care", 0), ("DLR*MERCEDESBENZ", "Car Care", 10),
-    ("LUBE", "Car Care", 0), ("PARKING", "Car Care", 0), ("PMUSA", "Car Care", 0),
+    ("LUBE", "Car Care", 0), ("AUTOZONE", "Car Care", 0), ("PARKING", "Car Care", 0), ("PMUSA", "Car Care", 0),
     ("HCTRA", "Tolls", 0), ("EZ TAG", "Tolls", 0),
     ("STATE FARM", "Insurance", 0), ("GEICO", "Insurance", 0),
     # Health & family
@@ -86,8 +91,9 @@ RULES = [
     ("Monthly Maintenance Fee", "Government & Fees", 10),
     ("VEHREG", "Government & Fees", 0), ("TXDOT", "Government & Fees", 0), ("TEXAS.GOV", "Government & Fees", 0),
     ("DES:USATAXPYMT", "Taxes", 10), ("TURBOTAX", "Taxes", 0),
-    ("SUPER.COM", "Travel", 0), ("IAH ", "Travel", 0),
-    ("GOFUNDME", "Gifts & Donations", 0), ("GFM*", "Gifts & Donations", 0), ("GOFNDME", "Gifts & Donations", 0), ("HOTEL", "Travel", 0), ("AIRBNB", "Travel", 0),
+    ("SUPER.COM", "Travel", 0), ("IAH ", "Travel", 0), ("MARGARITAVILLE", "Travel", 0),
+    ("GOFUNDME", "Gifts & Donations", 0), ("GFM*", "Gifts & Donations", 0), ("GOFNDME", "Gifts & Donations", 0),
+    ("RAIN DROP FOUNDATION", "Gifts & Donations", 0), ("CHARITABLE ORG", "Gifts & Donations", 0), ("HOTEL", "Travel", 0), ("AIRBNB", "Travel", 0),
     ("ATM", "Cash Withdrawal", -5),
 ]
 
