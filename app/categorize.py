@@ -13,7 +13,7 @@ CATEGORIES = {
         "Rent", "Utilities", "Phone & Internet", "Home Services",
         "Car Payment", "Car Care", "Fuel", "Tolls", "Insurance",
         "Health", "Dental & Orthodontics", "Personal Care", "Education", "Kids Activities", "Fitness",
-        "Subscriptions", "Entertainment", "Travel", "Government & Fees", "Cash Withdrawal", "Zelle Sent", "Uncategorized",
+        "Subscriptions", "Entertainment", "Travel", "Taxes", "Government & Fees", "Cash Withdrawal", "Zelle Sent", "Uncategorized",
     ],
 }
 
@@ -27,6 +27,8 @@ RULES = [
     ("CASH REBATE", "Rewards & Cashback", 10),
     ("CASH REWARDS STATEMENT CREDIT", "Rewards & Cashback", 10),
     ("Daily Cash Adjustment", "Rewards & Cashback", 10),
+    ("DES:CASHREWARD", "Rewards & Cashback", 10),
+    ("APPLE CASH SENT", "Zelle Sent", 10),
     # Card payments, bank side
     ("APPLECARD GSBANK", CARD_PAYMENT, 20),
     ("AMERICAN EXPRESS DES:ACH PMT", CARD_PAYMENT, 20),
@@ -37,11 +39,12 @@ RULES = [
     ("COSTCO", "Groceries", 0), ("H-E-B", "Groceries", 0), ("SAM'S CLUB", "Groceries", 0),
     ("SAMS CLUB", "Groceries", 0), ("SAMSCLUB", "Groceries", 0),
     ("PHOENICIA", "Groceries", 0), ("GLOBUS MARKET", "Groceries", 0), ("KROGER", "Groceries", 0),
-    ("WALMART", "Groceries", 0), ("WM SUPERCENTER", "Groceries", 0), ("WAL-MART", "Groceries", 0), ("TRADER JOE", "Groceries", 0), ("WHOLE FOODS", "Groceries", 0),
+    ("WALMART", "Groceries", 0), ("WM SUPERCENTER", "Groceries", 0), ("WAL-MART", "Groceries", 0),
+    ("FOOD STORE", "Groceries", 0), ("FOOD MART", "Groceries", 0), ("PECAN CREEK FOOD", "Groceries", 0), ("TRADER JOE", "Groceries", 0), ("WHOLE FOODS", "Groceries", 0),
     # Dining
     ("UBER *EATS", "Dining", 5), ("DOORDASH", "Dining", 0), ("TST*", "Dining", 0),
     ("STARBUCKS", "Dining", 0), ("HIBACHI", "Dining", 0), ("HYDERABADI", "Dining", 0),
-    ("WAFFLE HOUSE", "Dining", 0), ("DD/BR", "Dining", 0), ("DUNKIN", "Dining", 0), ("MCDONALD", "Dining", 0), ("CHICK-FIL-A", "Dining", 0),
+    ("WAFFLE HOUSE", "Dining", 0), ("DD/BR", "Dining", 0), ("DUNKIN", "Dining", 0), ("BAKERY", "Dining", 0), ("MCDONALD", "Dining", 0), ("CHICK-FIL-A", "Dining", 0),
     # Shopping
     ("Amazon Prime", "Subscriptions", 10), ("AMAZON", "Amazon", 0), ("AMZN", "Amazon", 0),
     ("T.J. MAXX", "Clothing", 0), ("MARSHALLS", "Clothing", 0), ("ROSS STORE", "Clothing", 0),
@@ -58,20 +61,25 @@ RULES = [
     ("AUTONATION FINANC", "Car Payment", 0), ("MBFS", "Car Payment", 0), ("MERCEDES BENZ", "Car Payment", 0),
     ("EXXON", "Fuel", 0), ("SHELL", "Fuel", 0), ("CHEVRON", "Fuel", 0), ("BUC-EE", "Fuel", 0), ("PILOT", "Fuel", 0), ("LOVES #", "Fuel", 0),
     ("SUNOCO", "Fuel", 0), ("TEXACO", "Fuel", 0),
-    ("CAR WASH", "Car Care", 0),
+    ("CAR WASH", "Car Care", 0), ("DLR*MERCEDESBENZ", "Car Care", 10),
     ("HCTRA", "Tolls", 0), ("EZ TAG", "Tolls", 0),
     ("STATE FARM", "Insurance", 0), ("GEICO", "Insurance", 0),
     # Health & family
-    ("UNITEDHEALTH", "Health", 0), ("KELSEY-SEYBOLD", "Health", 0), ("CVS", "Health", 0), ("MYUHC", "Health", 0),
+    ("UNITEDHEALTH", "Health", 0), ("KELSEY-SEYBOLD", "Health", 0), ("CVS", "Health", 0), ("MYUHC", "Health", 0), ("UHC EXCHANGES", "Health", 0),
+    ("URGENT CARE", "Health", 0), ("EYE CARE", "Health", 0),
     ("DENTAL", "Dental & Orthodontics", 0), ("ORTHODONT", "Dental & Orthodontics", 0),
     ("UNIVERSITY", "Education", 0), ("SCHOOLCAFE", "Education", 0), ("MYEDUDOCS", "Education", 0), ("CISD", "Education", 0), ("SCHOOL TOOL BOX", "Education", 0), ("MARTIAL ARTS", "Kids Activities", 0),
     ("DYNAMIC FIT", "Fitness", 0),
     # Subscriptions & cash
     ("OPENAI", "Subscriptions", 0), ("NETFLIX", "Subscriptions", 0), ("APPLE.COM/BILL", "Subscriptions", 0),
     ("SPOTIFY", "Subscriptions", 0), ("DIGITALOCEAN", "Subscriptions", 0),
+    ("GODADDY", "Subscriptions", 0), ("DELLMONT", "Subscriptions", 0),
     ("BARBER", "Personal Care", 0), ("BABER OF AMERICA", "Personal Care", 0),
-    ("PLAYSTATION", "Entertainment", 0), ("TEBEX", "Entertainment", 0), ("ROBLOX", "Entertainment", 0),
-    ("TX DPS", "Government & Fees", 0),
+    ("PLAYSTATION", "Entertainment", 0), ("TEBEX", "Entertainment", 0), ("ROBLOX", "Entertainment", 0), ("CINEMA", "Entertainment", 0),
+    ("TX DPS", "Government & Fees", 0), ("Wire Transfer Fee", "Government & Fees", 10),
+    ("Monthly Maintenance Fee", "Government & Fees", 10),
+    ("VEHREG", "Government & Fees", 0), ("TXDOT", "Government & Fees", 0), ("TEXAS.GOV", "Government & Fees", 0),
+    ("DES:USATAXPYMT", "Taxes", 10), ("TURBOTAX", "Taxes", 0),
     ("SUPER.COM", "Travel", 0), ("HOTEL", "Travel", 0), ("AIRBNB", "Travel", 0),
     ("ATM", "Cash Withdrawal", -5),
 ]

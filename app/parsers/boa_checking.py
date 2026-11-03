@@ -7,12 +7,14 @@ SECTIONS = {
     "Deposits and other additions": +1,
     "ATM and debit card subtractions": -1,
     "Other subtractions": -1,
+    "Checks": -1,
+    "Service fees": -1,
 }
 TXN_RE = re.compile(rf"^(\d{{2}}/\d{{2}}/\d{{2}})\s+(.+?)\s+({AMOUNT_RE})$")
 # Lines that end a run of description continuation lines.
 STOP_RE = re.compile(
     r"^(Total |continued on the next page|Date Description Amount|Page \d+ of|.*! Account #|"
-    r"Withdrawals and other subtractions|This page intentionally)"
+    r"Withdrawals and other subtractions|This page intentionally|Note your Ending Balance)"
 )
 
 
@@ -38,12 +40,13 @@ def parse(text: str) -> ParsedStatement:
     )
 
     sign = None          # +1 / -1 while inside a transaction section
+    section = None
     current = None       # transaction still collecting continuation lines
     for raw in text.splitlines():
         line = raw.strip()
         header = line.removesuffix(" - continued")
         if header in SECTIONS:
-            sign, current = SECTIONS[header], None
+            section, sign, current = header, SECTIONS[header], None
             continue
         if sign is None:
             continue
@@ -56,7 +59,8 @@ def parse(text: str) -> ParsedStatement:
         if m:
             current = ParsedTxn(
                 date=parse_date(m.group(1), "%m/%d/%y"),
-                description=m.group(2),
+                # The Checks table only has the check number where the description would be.
+                description=f"Check {m.group(2)}" if section == "Checks" else m.group(2),
                 amount_cents=sign * abs(cents(m.group(3))),
             )
             stmt.transactions.append(current)
