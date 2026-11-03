@@ -243,6 +243,8 @@ def _run_card(conn: sqlite3.Connection, card_id: int, bank_payments: list[sqlite
     unmatched = list(bank_payments)
     credits = []  # (date, cents, bank payment or None, refund category or None)
     for t in txns:
+        if t["kind"] == "transfer" and not t["is_card_payment"]:
+            continue  # e.g. a disputed charge and its refund: neither is spending to pay off
         if t["amount_cents"] < 0:
             queue.append(_Charge(t, t["date"], t["category"] or "Uncategorized", -t["amount_cents"]))
         elif t["is_card_payment"]:
