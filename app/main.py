@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import date
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -7,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from . import categorize, db, importer, reports
+from . import categorize, db, importer, plan, reports
 
 HERE = Path(__file__).resolve().parent
 
@@ -23,6 +24,8 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Expense Tracker", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
 templates = Jinja2Templates(directory=HERE / "templates")
+# "/static/app.css?v=<mtime>" so browsers pick up a changed file instead of a cached copy.
+templates.env.globals["static"] = lambda name: f"/static/{name}?v={int((HERE / 'static' / name).stat().st_mtime)}"
 templates.env.filters["money"] = lambda cents: f"{'-' if cents < 0 else ''}${abs(cents) / 100:,.2f}"
 
 
@@ -58,6 +61,52 @@ def dashboard(request: Request, month: str | None = None, view: str = "cash", co
         "has_income_source": reports.income_account_id(conn) is not None,
         "has_data": bool(months),
     })
+
+
+# --- monthly plan -------------------------------------------------------------------------------
+
+def _add_months(month: str, n: int) -> str:
+    y, m = map(int, month.split("-"))
+    y, m = divmod(y * 12 + (m - 1) + n, 12)
+    return f"{y:04d}-{m + 1:02d}"
+
+
+def _cents(text: str) -> int:
+    try:
+        return round(float(text.replace("$", "").replace(",", "").strip() or 0) * 100)
+    except ValueError:
+        return 0
+
+
+@app.get("/plan", response_class=HTMLResponse)
+def plan_page(request: Request, month: str | None = None, basis: int = 3, conn=Depends(get_conn)):
+    this_month = date.today().strftime("%Y-%m")
+    month = month or this_month
+    basis = basis if basis in (3, 6, 12) else 3
+    options = set(reports.months(conn)) | set(plan.planned_months(conn)) | {
+        _add_months(this_month, i) for i in range(3)} | {month}
+    return templates.TemplateResponse(request, "plan.html", {
+        "p": plan.load(conn, month, basis),
+        "months": sorted(options, reverse=True),
+        "this_month": this_month,
+        "basis": basis,
+        "categories": conn.execute("SELECT name, kind FROM categories ORDER BY name").fetchall(),
+    })
+
+
+@app.post("/plan")
+async def save_plan(request: Request, conn=Depends(get_conn)):
+    form = await request.form()
+    month, basis = form["month"], form.get("basis", "3")
+    lines = list(zip(form.getlist("kind"), form.getlist("name"), map(_cents, form.getlist("amount"))))
+    plan.save(conn, month, [(k, n, c) for k, n, c in lines if k in ("income", "expense")])
+    return back(f"/plan?month={month}&basis={basis}")
+
+
+@app.post("/plan/reset")
+def reset_plan(month: str = Form(...), basis: int = Form(3), conn=Depends(get_conn)):
+    plan.reset(conn, month)
+    return back(f"/plan?month={month}&basis={basis}")
 
 
 # --- upload -------------------------------------------------------------------------------------

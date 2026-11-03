@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Expense Tracker{% endblock %}</title>
-  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="{{ static('app.css') }}">
 </head>
 <body>
   <header class="topbar">
@@ -12,6 +12,7 @@
     <nav>
       {% set path = request.url.path %}
       <a href="/" class="{{ 'on' if path == '/' }}">Dashboard</a>
+      <a href="/plan" class="{{ 'on' if path.startswith('/plan') }}">Plan</a>
       <a href="/transactions" class="{{ 'on' if path.startswith('/transactions') }}">Transactions</a>
       <a href="/upload" class="{{ 'on' if path.startswith('/upload') }}">Upload</a>
       <a href="/accounts" class="{{ 'on' if path.startswith('/accounts') }}">Accounts</a>

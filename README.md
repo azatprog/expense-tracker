@@ -65,6 +65,14 @@ Payments to cards with no uploaded statements (e.g. Macy's/Citi) stay as one
 - **By charge date**: every account's transactions on the day they happened, card payments
   ignored as transfers. Answers "what did I spend in October".
 
+## Plan
+
+**Plan** budgets a month up front: expected income and expenses per category, prefilled with the
+typical cash-flow amount of the last 3, 6 or 12 months (a single month more than double the
+others' average, like a one-off down payment, is left out). Edit amounts, remove lines or add your
+own; "Left over" updates as you type, and **Save plan** stores it for that month. Once the
+month's statements are uploaded, an "Actual" column shows what really happened.
+
 ## Categorizing
 
 Rules (on **Rules**) are case-insensitive substrings of the description; higher priority wins,

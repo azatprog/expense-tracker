@@ -144,3 +144,11 @@ details.cat table { margin: 0 0 10px 18px; width: calc(100% - 18px); }
   .tiles { grid-template-columns: 1fr; }
   .alloc { columns: 1; }
 }
+
+/* Plan page */
+table.plan .w-name { width: 100%; min-width: 10em; }
+table.plan input.w-amount { width: 6.5em; text-align: right; }
+table.plan td:first-child { width: 60%; }
+table.plan .dollar { color: var(--text-muted); margin-right: 4px; }
+table.plan td { vertical-align: middle; }
+table.plan tfoot th { border-top: 1px solid var(--border); border-bottom: 0; color: var(--text-primary); }

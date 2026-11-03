@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Plan · Expense Tracker{% endblock %}
+
+{% macro dollars(cents) %}{{ '%.2f' % (cents / 100) if cents % 100 else (cents // 100) }}{% endmacro %}
+
+{% macro row(kind, line) %}
+<tr class="line">
+  <td><input name="name" value="{{ line.name if line else '' }}" list="category-names" aria-label="Name" placeholder="e.g. Thanksgiving trip" class="w-name"></td>
+  <td class="num">
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <span class="dollar">$</span><input name="amount" value="{{ dollars(line.amount_cents) if line else '' }}" inputmode="decimal" aria-label="Amount" class="w-amount">
+  </td>
+  <td class="num sub">{{ line.suggested_cents | money if line and line.suggested_cents is not none else '—' }}</td>
+  {% if p.has_actuals %}<td class="num sub">{{ line.actual_cents | money if line and line.actual_cents is not none else '—' }}</td>{% endif %}
+  <td><button type="button" class="btn small remove" aria-label="Remove line">✕</button></td>
+</tr>
+{% endmacro %}
+
+{% macro section(kind, title, lines) %}
+<section class="card">
+  <h2>{{ title }}</h2>
+  <table class="compact plan" data-kind="{{ kind }}">
+    <thead><tr><th>Name</th><th class="num">Planned</th><th class="num">Avg</th>
+      {% if p.has_actuals %}<th class="num">Actual</th>{% endif %}<th></th></tr></thead>
+    <tbody>{% for line in lines %}{{ row(kind, line) }}{% endfor %}</tbody>
+    <tfoot><tr><th>Total</th><th class="num total">{{ (lines | sum(attribute='amount_cents')) | money }}</th><th></th>
+      {% if p.has_actuals %}<th></th>{% endif %}<th></th></tr></tfoot>
+  </table>
+  <button type="button" class="btn small add" data-kind="{{ kind }}">+ Add {{ 'income' if kind == 'income' else 'expense' }}</button>
+  <template id="row-{{ kind }}">{{ row(kind, none) }}</template>
+</section>
+{% endmacro %}
+
+{% block content %}
+<div class="toolbar">
+  <form method="get" class="filters">
+    <label>Month
+      <select name="month" onchange="this.form.submit()">
+        {% for m in months %}<option value="{{ m }}" {{ 'selected' if m == p.month }}>{{ m }}{{ ' (this month)' if m == this_month }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Suggest from the last
+      <select name="basis" onchange="this.form.submit()">
+        {% for b in [3, 6, 12] %}<option value="{{ b }}" {{ 'selected' if b == basis }}>{{ b }} months</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+</div>
+
+<section class="tiles">
+  <div class="tile"><span class="label">Expected income</span><span class="value" id="t-income">{{ p.income_cents | money }}</span></div>
+  <div class="tile"><span class="label">Planned expenses</span><span class="value" id="t-expense">{{ p.expense_cents | money }}</span></div>
+  <div class="tile"><span class="label">Left over</span>
+    <span class="value {{ 'neg' if p.left_cents < 0 }}" id="t-left">{{ p.left_cents | money }}</span></div>
+</section>
+<p class="hint">
+  {% if p.saved %}Your saved plan for {{ p.month }}.{% else %}<strong>Not saved yet.</strong> Prefilled with your monthly
+    average{% endif %}{% if p.history %} — “Avg” is the cash-flow average for {{ p.history[0] }} to {{ p.history[-1] }}.{% else %}.{% endif %}
+  {% if p.has_actuals %}“Actual” is what really came in and went out in {{ p.month }} so far.{% endif %}
+  Card payments count by what they bought, like on the dashboard.
+</p>
+
+<form method="post" action="/plan" id="plan-form">
+  <input type="hidden" name="month" value="{{ p.month }}">
+  <input type="hidden" name="basis" value="{{ basis }}">
+  <div class="grid">
+    {{ section('income', 'Income', p.income) }}
+    {{ section('expense', 'Expenses', p.expenses) }}
+  </div>
+  <p>
+    <button class="btn primary" type="submit">Save plan</button>
+    <span class="sub" id="dirty" hidden>Unsaved changes</span>
+  </p>
+</form>
+{% if p.saved %}
+<form method="post" action="/plan/reset" onsubmit="return confirm('Discard your saved plan for {{ p.month }} and start again from the averages?')">
+  <input type="hidden" name="month" value="{{ p.month }}">
+  <input type="hidden" name="basis" value="{{ basis }}">
+  <button class="btn small" type="submit">Reset to averages</button>
+</form>
+{% endif %}
+
+<datalist id="category-names">
+  {% for c in categories if c.kind != 'transfer' %}<option value="{{ c.name }}">{% endfor %}
+</datalist>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const form = document.getElementById('plan-form');
+  const money = (c) => (c < 0 ? '-$' : '$') + (Math.abs(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const cents = (s) => Math.round((parseFloat(String(s).replace(/[$,\s]/g, '')) || 0) * 100);
+
+  function recalc() {
+    const totals = {};
+    form.querySelectorAll('table.plan').forEach((t) => {
+      const sum = [...t.querySelectorAll('input[name=amount]')].reduce((a, i) => a + cents(i.value), 0);
+      totals[t.dataset.kind] = sum;
+      t.querySelector('.total').textContent = money(sum);
+    });
+    const left = (totals.income || 0) - (totals.expense || 0);
+    document.getElementById('t-income').textContent = money(totals.income || 0);
+    document.getElementById('t-expense').textContent = money(totals.expense || 0);
+    const l = document.getElementById('t-left');
+    l.textContent = money(left);
+    l.classList.toggle('neg', left < 0);
+  }
+  const dirty = () => { document.getElementById('dirty').hidden = false; recalc(); };
+
+  form.addEventListener('input', dirty);
+  form.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove')) { e.target.closest('tr').remove(); dirty(); }
+    if (e.target.classList.contains('add')) {
+      const kind = e.target.dataset.kind;
+      const row = document.getElementById('row-' + kind).content.firstElementChild.cloneNode(true);
+      form.querySelector(`table.plan[data-kind=${kind}] tbody`).appendChild(row);
+      row.querySelector('input[name=name]').focus();
+      dirty();
+    }
+  });
+  window.addEventListener('beforeunload', (e) => {
+    if (!document.getElementById('dirty').hidden) e.preventDefault();
+  });
+  form.addEventListener('submit', () => { document.getElementById('dirty').hidden = true; });
+})();
+</script>
+{% endblock %}
