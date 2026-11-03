@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "expense-tracker",
+      "runtimeExecutable": "./run.sh",
+      "runtimeArgs": ["--reload", "--reload-dir", "app"],
+      "port": 8765
+    }
+  ]
+}
