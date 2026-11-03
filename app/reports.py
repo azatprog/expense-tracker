@@ -47,6 +47,7 @@ class CategoryTotal:
     total_cents: int = 0
     items: list[Item] = field(default_factory=list)
     via_cards_cents: int = 0
+    children: list["CategoryTotal"] = field(default_factory=list)   # set for a category group
 
 
 @dataclass
@@ -183,6 +184,25 @@ def summary(conn: sqlite3.Connection, month: str | None, view: str = "cash") -> 
         expense_cents=sum(c.total_cents for c in exp),
         income=inc, expenses=exp, card_payments=payments,
     )
+
+
+def group_categories(conn: sqlite3.Connection, cats: list[CategoryTotal]) -> list[CategoryTotal]:
+    """Fold categories that share a group (categories.grp) into one line with them as children."""
+    group_of = {r["name"]: r["grp"] for r in conn.execute("SELECT name, grp FROM categories WHERE grp IS NOT NULL AND grp != ''")}
+    out: list[CategoryTotal] = []
+    groups: dict[str, CategoryTotal] = {}
+    for c in cats:
+        g = group_of.get(c.name)
+        if not g:
+            out.append(c)
+            continue
+        if g not in groups:
+            groups[g] = CategoryTotal(g)
+            out.append(groups[g])
+        groups[g].children.append(c)
+        groups[g].total_cents += c.total_cents
+        groups[g].via_cards_cents += c.via_cards_cents
+    return sorted(out, key=lambda c: -c.total_cents)
 
 
 def trend(conn: sqlite3.Connection, view: str = "cash") -> list[tuple[str, int, int]]:

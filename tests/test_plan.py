@@ -114,3 +114,18 @@ def test_migration_adds_categories_column_to_old_database(tmp_path):
     c.execute("INSERT INTO budget_lines (month, kind, name, amount_cents) VALUES ('2026-11', 'expense', 'Rent', 1)")
     db.init(c)
     assert plan.load(c, "2026-11").expenses[0].categories == []
+
+
+def test_group_edit_routes(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "DB_PATH", tmp_path / "web.db")
+    from app.main import app
+    with TestClient(app) as client:
+        client.post("/groups", data={"name": "Food", "categories": ["Groceries", "Dining"]})
+        page = client.get("/rules").text
+        assert "Groceries + Dining" in page or "Dining + Groceries" in page
+        client.post("/groups", data={"name": "Food", "categories": ["Groceries"]})   # replaces members
+        c = db.connect(tmp_path / "web.db")
+        assert {r[0] for r in c.execute("SELECT name FROM categories WHERE grp = 'Food'")} == {"Groceries"}
+        client.post("/groups/delete", data={"name": "Food"})
+        assert c.execute("SELECT COUNT(*) FROM categories WHERE grp IS NOT NULL").fetchone()[0] == 0
+        assert client.get("/").status_code == 200
