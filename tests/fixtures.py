@@ -58,8 +58,10 @@ Date Description Daily Cash Amount
 09/05/2026 KELSEY-SEYBOLD CLINIC 11511 SHADOW CREEK PKWY PEARLAND 77584 TX USA 2% $0.40 $20.00
 3% Daily Cash at Uber 1% $0.50
 09/06/2026 HOUSE OF SPORT RETURN 24600 Katy Fwy Katy 77494 TX USA 2% -$0.10 -$5.00
+09/07/2026 PAY*SOMESCHOOL 1 MAIN ST HOUSTON 77031 TX USA (RETURN) -$10.00
+Daily Cash Adjustment -1% $0.10
 Total Daily Cash this month $1.30
-Total charges, credits and returns $65.00
+Total charges, credits and returns $55.10
 Apple Card Monthly Installments
 Dates Description Daily Cash Amounts
 07/24/2026 Apple Store SUGAR LAND TX $609.00

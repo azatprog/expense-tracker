@@ -37,8 +37,8 @@
 </section>
 <p class="hint">
   {% if view == 'cash' %}
-    Cash flow: money in and out of your income account. Credit card payments are replaced by the categories of
-    the card statement they paid.
+    Cash flow: money in and out of your income account. Each credit card payment is replaced by the card
+    charges it paid off (oldest unpaid charges first).
   {% else %}
     By charge date: every account's spending on the day it happened. Card payments are transfers and don't count.
   {% endif %}
@@ -88,10 +88,6 @@
               <td class="num">{{ i.amount_cents | money }}</td></tr>
           {% endfor %}
         </table>
-        {% if c.via_cards_cents %}
-          <p class="sub">Card charges are listed at full amount; the category total uses the share of the
-            payment that went to this category.</p>
-        {% endif %}
       </details>
     {% else %}<p class="sub">No expenses in this period.</p>{% endfor %}
   </section>
@@ -120,15 +116,17 @@
             <span><strong>{{ p.card or p.description }}</strong> <span class="sub">{{ p.date }}</span></span>
             <span class="amt">{{ p.amount_cents | money }}</span>
           </div>
-          {% if p.method == 'none' %}
+          {% if p.card is none %}
             <p class="badge warn">No statement uploaded for this card — counted as one expense line.</p>
           {% else %}
             <p class="sub">
-              Paid statement {{ p.statement }}
-              {% if p.method == 'exact' %}<span class="badge ok">exact balance match</span>
-              {% elif p.method == 'previous' %}<span class="badge">latest closed statement</span>
-              {% else %}<span class="badge warn">estimated — split using the closest uploaded statement</span>{% endif %}
+              {% if p.charge_dates %}Paid off charges from {{ p.charge_dates[0] }} to {{ p.charge_dates[1] }}{% endif %}
+              {% if not p.opening_cents and not p.missing_cents %}<span class="badge ok">fully matched</span>{% endif %}
             </p>
+            {% if p.opening_cents %}<p class="badge warn">{{ p.opening_cents | money }} paid a balance from before your
+              first uploaded statement for this card</p>{% endif %}
+            {% if p.missing_cents %}<p class="badge warn">{{ p.missing_cents | money }} paid charges from a card
+              statement that isn't uploaded yet</p>{% endif %}
             <ul class="alloc">
               {% for name, cents in p.allocations %}<li><span>{{ name }}</span><span>{{ cents | money }}</span></li>{% endfor %}
             </ul>

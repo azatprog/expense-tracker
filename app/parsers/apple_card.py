@@ -8,6 +8,8 @@ PAYMENT_RE = re.compile(rf"^(\d{{2}}/\d{{2}}/\d{{4}})\s+(.+?)\s+({AMOUNT_RE})$")
 # "<date> <merchant+address> <n>% $<daily cash> $<amount>"
 CHARGE_RE = re.compile(rf"^(\d{{2}}/\d{{2}}/\d{{4}})\s+(.+?)\s+\d+%\s+{AMOUNT_RE}\s+({AMOUNT_RE})$")
 INSTALLMENT_RE = re.compile(rf"^(\d{{2}}/\d{{2}}/\d{{4}})\s+(.+?)\s+({AMOUNT_RE})$")
+# Daily Cash taken back on a return: "Daily Cash Adjustment -1% $6.18" (no date of its own).
+ADJUSTMENT_RE = re.compile(rf"^(Daily Cash Adjustment)\s+-?\d+%\s+({AMOUNT_RE})$")
 THIS_MONTH_RE = re.compile(rf"^This month.s installment:\s+({AMOUNT_RE})")
 
 
@@ -69,6 +71,14 @@ def parse(text: str) -> ParsedStatement:
                     is_card_payment=True,
                 ))
         elif section == "transactions":
+            adj = ADJUSTMENT_RE.match(line)
+            if adj and stmt.transactions:
+                stmt.transactions.append(ParsedTxn(
+                    date=stmt.transactions[-1].date,
+                    description=adj.group(1),
+                    amount_cents=-cents(adj.group(2)),
+                ))
+                continue
             m = CHARGE_RE.match(line) or PAYMENT_RE.match(line)
             if m:
                 # Charges are printed positive; returns/credits are printed -$x.
@@ -102,5 +112,5 @@ def check(text: str, stmt: ParsedStatement) -> list[str]:
     has_payments = re.search(r"^Payments$", text, re.M)
     return compare_totals([
         ("Payments", printed_total(text, "Total payments for this period") if has_payments else 0, payments),
-        ("Charges, credits and returns", printed_total(text, "Total charges, credits and returns"), net_charges),
+        ("Charges, credits and returns", printed_total(text, "Total charges, credits and returns", signed=True), net_charges),
     ])

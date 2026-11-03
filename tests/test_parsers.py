@@ -31,10 +31,19 @@ def test_apple_card():
     assert (s.source, s.kind) == ("apple_card", "credit")
     assert (s.period_start, s.period_end) == (date(2026, 9, 1), date(2026, 9, 30))
     assert s.balance_cents == 8000
-    assert amounts(s) == [50000, -5000, -2000, 500, -1500]
+    assert amounts(s) == [50000, -5000, -2000, 500, 1000, -10, -1500]
+    assert s.transactions[5].description == "Daily Cash Adjustment"
+    assert s.transactions[5].date == date(2026, 9, 7)
     assert s.transactions[0].is_card_payment
     assert s.transactions[-1].description == "Installment: Apple Store SUGAR LAND TX"
     assert s.transactions[-1].date == date(2026, 9, 30)
+
+
+def test_apple_month_where_returns_exceed_charges():
+    text = APPLE_CARD.replace("(RETURN) -$10.00", "(RETURN) -$100.00").replace(
+        "Daily Cash Adjustment -1% $0.10", "Daily Cash Adjustment -1% $1.00").replace(
+        "Total charges, credits and returns $55.10", "Total charges, credits and returns -$34.00")
+    assert parse_text(text).warnings == []
 
 
 def test_amex():
@@ -94,3 +103,9 @@ def test_skipped_line_is_flagged():
 def test_missing_printed_total_is_flagged():
     text = AMEX.replace("Less Payments/Credits $100.00\n", "")
     assert parse_text(text).warnings == ["Couldn't find the printed total for Payments and credits"]
+
+
+def test_printed_total_with_second_column_on_the_same_line():
+    text = BOA_CREDIT.replace("Payments and Other Credits -$100.00\n",
+                              "Payments and Other Credits -$100.00 Total Minimum Payment Due $35.00\n")
+    assert parse_text(text).warnings == []

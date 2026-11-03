@@ -12,8 +12,8 @@ CATEGORIES = {
         "Groceries", "Dining", "Amazon", "Shopping", "Clothing", "Electronics",
         "Rent", "Utilities", "Phone & Internet", "Home Services",
         "Car Payment", "Car Care", "Fuel", "Tolls", "Insurance",
-        "Health", "Dental & Orthodontics", "Education", "Kids Activities", "Fitness",
-        "Subscriptions", "Entertainment", "Cash Withdrawal", "Zelle Sent", "Uncategorized",
+        "Health", "Dental & Orthodontics", "Personal Care", "Education", "Kids Activities", "Fitness",
+        "Subscriptions", "Entertainment", "Travel", "Government & Fees", "Cash Withdrawal", "Zelle Sent", "Uncategorized",
     ],
 }
 
@@ -25,6 +25,8 @@ RULES = [
     ("Garcia Cut Grass", "Home Services", 10),
     ("Redeem Cash Back", "Rewards & Cashback", 10),
     ("CASH REBATE", "Rewards & Cashback", 10),
+    ("CASH REWARDS STATEMENT CREDIT", "Rewards & Cashback", 10),
+    ("Daily Cash Adjustment", "Rewards & Cashback", 10),
     # Card payments, bank side
     ("APPLECARD GSBANK", CARD_PAYMENT, 20),
     ("AMERICAN EXPRESS DES:ACH PMT", CARD_PAYMENT, 20),
@@ -35,50 +37,56 @@ RULES = [
     ("COSTCO", "Groceries", 0), ("H-E-B", "Groceries", 0), ("SAM'S CLUB", "Groceries", 0),
     ("SAMS CLUB", "Groceries", 0), ("SAMSCLUB", "Groceries", 0),
     ("PHOENICIA", "Groceries", 0), ("GLOBUS MARKET", "Groceries", 0), ("KROGER", "Groceries", 0),
-    ("WALMART", "Groceries", 0), ("TRADER JOE", "Groceries", 0), ("WHOLE FOODS", "Groceries", 0),
+    ("WALMART", "Groceries", 0), ("WM SUPERCENTER", "Groceries", 0), ("WAL-MART", "Groceries", 0), ("TRADER JOE", "Groceries", 0), ("WHOLE FOODS", "Groceries", 0),
     # Dining
     ("UBER *EATS", "Dining", 5), ("DOORDASH", "Dining", 0), ("TST*", "Dining", 0),
-    ("STARBUCKS", "Dining", 0), ("HIBACHI", "Dining", 0), ("MCDONALD", "Dining", 0), ("CHICK-FIL-A", "Dining", 0),
+    ("STARBUCKS", "Dining", 0), ("HIBACHI", "Dining", 0), ("HYDERABADI", "Dining", 0),
+    ("WAFFLE HOUSE", "Dining", 0), ("DD/BR", "Dining", 0), ("DUNKIN", "Dining", 0), ("MCDONALD", "Dining", 0), ("CHICK-FIL-A", "Dining", 0),
     # Shopping
     ("Amazon Prime", "Subscriptions", 10), ("AMAZON", "Amazon", 0), ("AMZN", "Amazon", 0),
     ("T.J. MAXX", "Clothing", 0), ("MARSHALLS", "Clothing", 0), ("ROSS STORE", "Clothing", 0),
     ("BURLINGTON", "Clothing", 0), ("MACY", "Clothing", 0),
-    ("House of Sport", "Shopping", 0), ("TARGET", "Shopping", 0),
+    ("House of Sport", "Shopping", 0), ("ETSY", "Shopping", 0), ("TARGET", "Shopping", 0),
     ("Installment: Apple", "Electronics", 10), ("AT&T DEVICE", "Electronics", 10),
     # Home & bills
     ("MOVE SALES INC", "Rent", 0), ("Rent-dr", "Rent", 0),
     ("AQUA DES", "Utilities", 0), ("CPENERGY", "Utilities", 0), ("RELIANT", "Utilities", 0),
-    ("GEXA ENERGY", "Utilities", 0),
+    ("GEXA ENERGY", "Utilities", 0), ("BEST TRASH", "Utilities", 0),
     ("COMCAST", "Phone & Internet", 0), ("XFINITY", "Phone & Internet", 0), ("ATT DES:PAYMENT", "Phone & Internet", 0),
+    ("AT&T BILL", "Phone & Internet", 0), ("AT&T *PAYMENT", "Phone & Internet", 0),
     # Car
     ("AUTONATION FINANC", "Car Payment", 0), ("MBFS", "Car Payment", 0), ("MERCEDES BENZ", "Car Payment", 0),
-    ("EXXON", "Fuel", 0), ("SHELL", "Fuel", 0), ("CHEVRON", "Fuel", 0), ("BUC-EE", "Fuel", 0),
+    ("EXXON", "Fuel", 0), ("SHELL", "Fuel", 0), ("CHEVRON", "Fuel", 0), ("BUC-EE", "Fuel", 0), ("PILOT", "Fuel", 0), ("LOVES #", "Fuel", 0),
+    ("SUNOCO", "Fuel", 0), ("TEXACO", "Fuel", 0),
     ("CAR WASH", "Car Care", 0),
     ("HCTRA", "Tolls", 0), ("EZ TAG", "Tolls", 0),
     ("STATE FARM", "Insurance", 0), ("GEICO", "Insurance", 0),
     # Health & family
     ("UNITEDHEALTH", "Health", 0), ("KELSEY-SEYBOLD", "Health", 0), ("CVS", "Health", 0), ("MYUHC", "Health", 0),
     ("DENTAL", "Dental & Orthodontics", 0), ("ORTHODONT", "Dental & Orthodontics", 0),
-    ("UNIVERSITY", "Education", 0), ("SCHOOLCAFE", "Education", 0), ("MARTIAL ARTS", "Kids Activities", 0),
+    ("UNIVERSITY", "Education", 0), ("SCHOOLCAFE", "Education", 0), ("MYEDUDOCS", "Education", 0), ("CISD", "Education", 0), ("SCHOOL TOOL BOX", "Education", 0), ("MARTIAL ARTS", "Kids Activities", 0),
     ("DYNAMIC FIT", "Fitness", 0),
     # Subscriptions & cash
     ("OPENAI", "Subscriptions", 0), ("NETFLIX", "Subscriptions", 0), ("APPLE.COM/BILL", "Subscriptions", 0),
-    ("SPOTIFY", "Subscriptions", 0),
-    ("PLAYSTATION", "Entertainment", 0), ("TEBEX", "Entertainment", 0),
+    ("SPOTIFY", "Subscriptions", 0), ("DIGITALOCEAN", "Subscriptions", 0),
+    ("BARBER", "Personal Care", 0), ("BABER OF AMERICA", "Personal Care", 0),
+    ("PLAYSTATION", "Entertainment", 0), ("TEBEX", "Entertainment", 0), ("ROBLOX", "Entertainment", 0),
+    ("TX DPS", "Government & Fees", 0),
+    ("SUPER.COM", "Travel", 0), ("HOTEL", "Travel", 0), ("AIRBNB", "Travel", 0),
     ("ATM", "Cash Withdrawal", -5),
 ]
 
 
 def seed(conn: sqlite3.Connection) -> None:
-    if conn.execute("SELECT COUNT(*) FROM categories").fetchone()[0]:
-        return
+    """Add default categories and rules that this database hasn't had yet. A default rule is added
+    once (recorded in seeded_rules), so one the user deleted or changed is left alone."""
     for kind, names in CATEGORIES.items():
-        conn.executemany("INSERT INTO categories (name, kind) VALUES (?, ?)", [(n, kind) for n in names])
+        conn.executemany("INSERT OR IGNORE INTO categories (name, kind) VALUES (?, ?)", [(n, kind) for n in names])
     ids = category_ids(conn)
-    conn.executemany(
-        "INSERT INTO rules (pattern, category_id, priority) VALUES (?, ?, ?)",
-        [(p, ids[c], prio) for p, c, prio in RULES],
-    )
+    seeded = {r[0] for r in conn.execute("SELECT pattern FROM seeded_rules")}
+    new = [(p, ids[c], prio) for p, c, prio in RULES if p not in seeded]
+    conn.executemany("INSERT OR IGNORE INTO rules (pattern, category_id, priority) VALUES (?, ?, ?)", new)
+    conn.executemany("INSERT INTO seeded_rules (pattern) VALUES (?)", [(p,) for p, _, _ in new])
 
 
 def category_ids(conn: sqlite3.Connection) -> dict[str, int]:
