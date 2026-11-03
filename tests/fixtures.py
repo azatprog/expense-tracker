@@ -9,7 +9,7 @@ Deposits and other additions 3,012.11
 ATM and debit card subtractions -30.97
 Other subtractions -2,270.00
 Checks -0.00
-Service fees -0.00
+Service fees -30.00
 JANE DOE ! Account # 1111 2222 3333 ! September 26, 2026 to October 27, 2026
 Deposits and other additions
 Date Description Amount
@@ -40,6 +40,11 @@ WEB
 10/27/26 MOVE SALES INC DES:Rent-dr ID:69973418 INDN:Jane Doe CO ID:4522284225 -2,000.00
 WEB
 Total other subtractions -$2,270.00
+Service fees
+Date Transaction description Amount
+10/11/26 Wire Transfer Fee -30.00
+Total service fees -$30.00
+Note your Ending Balance already reflects the subtraction of Service Fees.
 """
 
 APPLE_CARD = """\

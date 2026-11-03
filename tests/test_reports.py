@@ -57,7 +57,7 @@ def test_cash_view_replaces_card_payments_with_the_charges_they_paid(conn):
     assert exp["Rent"] == 200000
     assert "Credit Card Payment" not in exp
     # Every dollar that left the account is accounted for
-    assert s.expense_cents == 2097 + 1000 + 15000 + 8000 + 4000 + 200000 - 1211
+    assert s.expense_cents == 2097 + 1000 + 15000 + 8000 + 4000 + 200000 - 1211 + 3000
 
 
 AMEX_TWO_PAYMENTS = """\

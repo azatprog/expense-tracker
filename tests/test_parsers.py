@@ -19,7 +19,8 @@ def test_boa_checking():
     assert (s.source, s.kind, s.last4) == ("boa_checking", "bank", "3333")
     assert (s.period_start, s.period_end) == (date(2026, 9, 26), date(2026, 10, 27))
     assert s.balance_cents == 100000
-    assert amounts(s) == [300000, 1211, -2097, -1000, -15000, -8000, -4000, -200000]
+    assert amounts(s) == [300000, 1211, -2097, -1000, -15000, -8000, -4000, -200000, -3000]
+    assert s.transactions[-1].description == "Wire Transfer Fee"
     # continuation lines are joined, page-break ad text is not
     assert s.transactions[0].description.endswith("ID:1234567890 PPD")
     assert s.transactions[3].description.endswith("RECURRING")
@@ -95,7 +96,7 @@ def test_parsed_totals_match_printed_totals(text):
 
 def test_skipped_line_is_flagged():
     # A check (section the parser doesn't read) makes the withdrawals total disagree.
-    text = BOA_CHECKING.replace("Checks -0.00", "Checks -500.00")
+    text = BOA_CHECKING.replace("Checks -0.00", "Checks -500.00")  # summary only, no Checks table
     [warning] = parse_text(text).warnings
     assert "Withdrawals" in warning and "off by $500.00" in warning
 
