@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Accounts · Expense Tracker{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Accounts</h1>
+  <p class="sub">The income account is where your pay lands and card bills are paid from. The cash-flow view
+    is built from it, with each card payment split into the categories of the card statement it paid.</p>
+  {% if accounts %}
+  <form method="post" action="/accounts/income-source">
+    <table class="compact">
+      <thead><tr><th>Income account</th><th>Account</th><th>Type</th></tr></thead>
+      {% for a in accounts %}
+        <tr>
+          <td><input type="radio" name="account_id" value="{{ a.id }}" {{ 'checked' if a.is_income_source }}
+                     {{ 'disabled' if a.kind != 'bank' }} onchange="this.form.submit()" aria-label="Use {{ a.name }} as income account"></td>
+          <td>{{ a.name }}</td><td class="sub">{{ 'Bank' if a.kind == 'bank' else 'Credit card' }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </form>
+  {% else %}<p>No accounts yet — <a href="/upload">upload a statement</a>.</p>{% endif %}
+</section>
+
+<section class="card narrow">
+  <h2>Statements</h2>
+  <table class="compact">
+    <thead><tr><th>Period</th><th>File</th><th class="num">Balance</th><th class="num">Txns</th><th></th></tr></thead>
+    {% for s in statements %}
+      <tr>
+        <td class="date">{{ s.period_start }} → {{ s.period_end }}</td>
+        <td>{{ s.file_name }}</td>
+        <td class="num">{{ s.balance_cents | money if s.balance_cents is not none else '—' }}</td>
+        <td class="num">{{ s.n }}</td>
+        <td><form method="post" action="/statements/{{ s.id }}/delete" onsubmit="return confirm('Delete this statement and its transactions?')">
+          <button class="btn small" type="submit">Delete</button></form></td>
+      </tr>
+    {% else %}<tr><td colspan="5" class="sub">None yet.</td></tr>{% endfor %}
+  </table>
+</section>
+{% endblock %}

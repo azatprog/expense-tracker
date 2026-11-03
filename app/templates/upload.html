@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Upload · Expense Tracker{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Upload statements</h1>
+  <p class="sub">PDF statements from Bank of America (checking or credit card), Apple Card or American Express.
+    The type is detected automatically; re-uploading the same file is ignored.</p>
+  <form method="post" enctype="multipart/form-data" class="upload">
+    <label class="drop">
+      <input type="file" name="files" accept="application/pdf" multiple required>
+      <span>Choose PDF files…</span>
+    </label>
+    <button class="btn primary" type="submit">Upload</button>
+  </form>
+  {% if results %}
+    <ul class="results">
+      {% for r in results %}
+        <li class="{{ r.status }}"><strong>{{ r.file_name }}</strong> — {{ r.status }}: {{ r.message }}</li>
+      {% endfor %}
+    </ul>
+    <p><a class="btn" href="/">Go to dashboard</a> <a class="btn" href="/transactions">Review transactions</a></p>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  const input = document.querySelector('input[type=file]');
+  input.addEventListener('change', () => {
+    input.nextElementSibling.textContent = [...input.files].map((f) => f.name).join(', ') || 'Choose PDF files…';
+  });
+</script>
+{% endblock %}

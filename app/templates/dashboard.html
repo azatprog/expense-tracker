@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not has_data %}
+  <section class="empty">
+    <h1>No statements yet</h1>
+    <p>Upload your Bank of America, Apple Card and Amex statements to see income vs expenses by category.</p>
+    <a class="btn primary" href="/upload">Upload statements</a>
+  </section>
+{% else %}
+<div class="toolbar">
+  <form method="get" class="filters">
+    <input type="hidden" name="view" value="{{ view }}">
+    <label>Month
+      <select name="month" onchange="this.form.submit()">
+        <option value="all" {{ 'selected' if month is none }}>All time</option>
+        {% for m in months %}<option value="{{ m }}" {{ 'selected' if m == month }}>{{ m }}</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+  <div class="segmented" role="tablist" aria-label="View">
+    <a href="?month={{ month or 'all' }}&view=cash" class="{{ 'on' if view == 'cash' }}"
+       title="What left your income account; card payments are split into the categories they paid for">Cash flow</a>
+    <a href="?month={{ month or 'all' }}&view=accrual" class="{{ 'on' if view == 'accrual' }}"
+       title="Every card charge on the day it was made; card payments are ignored as transfers">By charge date</a>
+  </div>
+</div>
+
+{% if view == 'cash' and not has_income_source %}
+  <p class="notice">Pick your income account on the <a href="/accounts">Accounts</a> page to see the cash-flow view.</p>
+{% endif %}
+
+<section class="tiles">
+  <div class="tile"><span class="label">Income</span><span class="value">{{ s.income_cents | money }}</span></div>
+  <div class="tile"><span class="label">Expenses</span><span class="value">{{ s.expense_cents | money }}</span></div>
+  <div class="tile"><span class="label">Net</span>
+    <span class="value {{ 'neg' if s.net_cents < 0 }}">{{ s.net_cents | money }}</span></div>
+</section>
+<p class="hint">
+  {% if view == 'cash' %}
+    Cash flow: money in and out of your income account. Credit card payments are replaced by the categories of
+    the card statement they paid.
+  {% else %}
+    By charge date: every account's spending on the day it happened. Card payments are transfers and don't count.
+  {% endif %}
+</p>
+
+<div class="grid">
+  <section class="card">
+    <h2>Expenses by category</h2>
+    <div class="legend">
+      <span><i class="sw s1"></i>{{ "Paid from bank" if view == "cash" else "Spent" }}</span>
+      {% if view == 'cash' %}<span><i class="sw s2"></i>Via credit cards</span>{% endif %}
+    </div>
+    <div class="chart" style="height: {{ [s.expenses | length * 28 + 40, 160] | max }}px">
+      <canvas id="byCategory" aria-label="Expenses by category" role="img"></canvas>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Income vs expenses by month</h2>
+    <div class="legend"><span><i class="sw inc"></i>Income</span><span><i class="sw exp"></i>Expenses</span></div>
+    <div class="chart" style="height: 260px"><canvas id="trend" aria-label="Income vs expenses by month" role="img"></canvas></div>
+    <table class="compact">
+      <thead><tr><th>Month</th><th class="num">Income</th><th class="num">Expenses</th><th class="num">Net</th></tr></thead>
+      <tbody>
+        {% for m, inc, exp in trend | reverse %}
+          <tr><td><a href="?month={{ m }}&view={{ view }}">{{ m }}</a></td><td class="num">{{ inc | money }}</td>
+            <td class="num">{{ exp | money }}</td><td class="num {{ 'neg' if inc - exp < 0 }}">{{ (inc - exp) | money }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Expenses</h2>
+    {% for c in s.expenses %}
+      <details class="cat">
+        <summary>
+          <span class="name">{{ c.name }}</span>
+          {% if c.via_cards_cents %}<span class="tag">{{ c.via_cards_cents | money }} via cards</span>{% endif %}
+          <span class="amt">{{ c.total_cents | money }}</span>
+        </summary>
+        <table class="compact">
+          {% for i in c.items %}
+            <tr><td class="date">{{ i.date }}</td><td>{{ i.merchant }}<div class="sub">{{ i.via or i.account }}</div></td>
+              <td class="num">{{ i.amount_cents | money }}</td></tr>
+          {% endfor %}
+        </table>
+        {% if c.via_cards_cents %}
+          <p class="sub">Card charges are listed at full amount; the category total uses the share of the
+            payment that went to this category.</p>
+        {% endif %}
+      </details>
+    {% else %}<p class="sub">No expenses in this period.</p>{% endfor %}
+  </section>
+
+  <div>
+    <section class="card">
+      <h2>Income</h2>
+      {% for c in s.income %}
+        <details class="cat">
+          <summary><span class="name">{{ c.name }}</span><span class="amt">{{ c.total_cents | money }}</span></summary>
+          <table class="compact">
+            {% for i in c.items %}
+              <tr><td class="date">{{ i.date }}</td><td>{{ i.merchant }}</td><td class="num">{{ i.amount_cents | money }}</td></tr>
+            {% endfor %}
+          </table>
+        </details>
+      {% else %}<p class="sub">No income in this period.</p>{% endfor %}
+    </section>
+
+    {% if view == 'cash' %}
+    <section class="card">
+      <h2>Credit card payments</h2>
+      {% for p in s.card_payments %}
+        <div class="payment">
+          <div class="row">
+            <span><strong>{{ p.card or p.description }}</strong> <span class="sub">{{ p.date }}</span></span>
+            <span class="amt">{{ p.amount_cents | money }}</span>
+          </div>
+          {% if p.method == 'none' %}
+            <p class="badge warn">No statement uploaded for this card — counted as one expense line.</p>
+          {% else %}
+            <p class="sub">
+              Paid statement {{ p.statement }}
+              {% if p.method == 'exact' %}<span class="badge ok">exact balance match</span>
+              {% elif p.method == 'previous' %}<span class="badge">latest closed statement</span>
+              {% else %}<span class="badge warn">estimated — split using the closest uploaded statement</span>{% endif %}
+            </p>
+            <ul class="alloc">
+              {% for name, cents in p.allocations %}<li><span>{{ name }}</span><span>{{ cents | money }}</span></li>{% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      {% else %}<p class="sub">No card payments in this period.</p>{% endfor %}
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if has_data %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  window.DASH = {
+    categories: {{ s.expenses | map(attribute='name') | list | tojson }},
+    direct: {{ s.expenses | map(attribute='total_cents') | list | tojson }},
+    viaCards: {{ s.expenses | map(attribute='via_cards_cents') | list | tojson }},
+    trend: {{ trend | tojson }},
+    view: {{ view | tojson }},
+  };
+</script>
+<script src="/static/dashboard.js"></script>
+{% endif %}
+{% endblock %}

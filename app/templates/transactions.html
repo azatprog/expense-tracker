@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Transactions · Expense Tracker{% endblock %}
+{% block content %}
+<form method="get" class="filters toolbar">
+  <label>Month
+    <select name="month"><option value="">All</option>
+      {% for m in months %}<option {{ 'selected' if m == f.month }}>{{ m }}</option>{% endfor %}</select>
+  </label>
+  <label>Account
+    <select name="account"><option value="">All</option>
+      {% for a in accounts %}<option value="{{ a.id }}" {{ 'selected' if a.id == f.account }}>{{ a.name }}</option>{% endfor %}</select>
+  </label>
+  <label>Category
+    <select name="category"><option value="">All</option>
+      {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if c.id == f.category }}>{{ c.name }}</option>{% endfor %}</select>
+  </label>
+  <label>Search <input type="search" name="q" value="{{ f.q }}" placeholder="Description"></label>
+  <button class="btn" type="submit">Filter</button>
+</form>
+
+<section class="card">
+  <p class="sub">{{ rows | length }} transactions. Changing a category saves it for that transaction; tick
+    “apply to all” to also create a rule for every matching description, now and on future uploads.</p>
+  <div class="table-wrap">
+  <table class="txns">
+    <thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="num">Amount</th><th>Category</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr data-id="{{ r.id }}" data-merchant="{{ r.merchant }}">
+        <td class="date">{{ r.date }}</td>
+        <td><div>{{ r.merchant }}</div><div class="sub" title="{{ r.description }}">{{ r.description | truncate(80) }}</div></td>
+        <td class="sub">{{ r.account }}</td>
+        <td class="num {{ 'pos' if r.amount_cents > 0 }}">{{ r.amount_cents | money }}</td>
+        <td>
+          <select class="cat-select" aria-label="Category">
+            {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if c.id == r.category_id }}>{{ c.name }}</option>{% endfor %}
+          </select>
+          <label class="sub rule-toggle"><input type="checkbox" class="make-rule"> apply to all “{{ r.merchant | truncate(24) }}”</label>
+          {% if r.category_locked %}<span class="badge" title="Set by hand; rules won't change it">manual</span>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('.cat-select').forEach((sel) => {
+    sel.addEventListener('change', async () => {
+      const tr = sel.closest('tr');
+      const makeRule = tr.querySelector('.make-rule').checked;
+      const res = await fetch(`/api/transactions/${tr.dataset.id}/category`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category_id: Number(sel.value), rule_pattern: makeRule ? tr.dataset.merchant : null }),
+      });
+      if (!res.ok) { alert('Could not save: ' + (await res.text())); return; }
+      if (makeRule) location.reload();
+      else sel.classList.add('saved');
+    });
+  });
+</script>
+{% endblock %}

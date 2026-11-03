@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.pytest_cache/
+# Real statements and the database hold personal financial data: never commit them.
+data/
+*.pdf
