@@ -98,8 +98,9 @@ def plan_page(request: Request, month: str | None = None, basis: int = 3, conn=D
 async def save_plan(request: Request, conn=Depends(get_conn)):
     form = await request.form()
     month, basis = form["month"], form.get("basis", "3")
-    lines = list(zip(form.getlist("kind"), form.getlist("name"), map(_cents, form.getlist("amount"))))
-    plan.save(conn, month, [(k, n, c) for k, n, c in lines if k in ("income", "expense")])
+    lines = zip(form.getlist("kind"), form.getlist("name"), map(_cents, form.getlist("amount")),
+                map(plan.split_categories, form.getlist("categories")))
+    plan.save(conn, month, [line for line in lines if line[0] in ("income", "expense")])
     return back(f"/plan?month={month}&basis={basis}")
 
 
