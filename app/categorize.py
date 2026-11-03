@@ -4,10 +4,11 @@ import sqlite3
 
 CARD_PAYMENT = "Credit Card Payment"            # bank side: money sent to a card
 CARD_PAYMENT_RECEIVED = "Card Payment Received"  # card side: the same money arriving
+DISPUTED = "Disputed / Fraud"                    # a charge and its refund, set by hand; nets to zero
 
 CATEGORIES = {
     "income": ["Salary", "Zelle Received", "Rewards & Cashback", "Other Income"],
-    "transfer": [CARD_PAYMENT, CARD_PAYMENT_RECEIVED, "Transfer"],
+    "transfer": [CARD_PAYMENT, CARD_PAYMENT_RECEIVED, "Transfer", DISPUTED],
     "expense": [
         "Groceries", "Dining", "Amazon", "Shopping", "Clothing", "Electronics",
         "Rent", "Utilities", "Phone & Internet", "Home Services",

@@ -140,3 +140,22 @@ def test_new_default_rules_reach_an_existing_db_but_deleted_ones_stay_deleted(co
     db.init(conn)
     patterns = {r[0] for r in conn.execute("SELECT pattern FROM rules")}
     assert "ROBLOX" in patterns and "NETFLIX" not in patterns
+
+
+def test_disputed_charge_and_its_refund_are_left_out(conn):
+    fraud = AMEX_TWO_PAYMENTS.replace(
+        "09/20/26 NETFLIX.COM 866-579-7172 CA $60.00\n",
+        "09/20/26 NETFLIX.COM 866-579-7172 CA $60.00\n09/21/26 SOME FRAUDSTER LLC $3,305.57\n",
+    ).replace("New Balance $30.00", "New Balance $3,335.57").replace("Plus New Charges $100.00", "Plus New Charges $3,405.57")
+    load(conn, BANK_TWO_PAYMENTS, fraud)
+    disputed = conn.execute("SELECT id FROM categories WHERE name = 'Disputed / Fraud'").fetchone()[0]
+    conn.execute("UPDATE transactions SET category_id = ?, category_locked = 1 WHERE description LIKE 'SOME FRAUDSTER%'", (disputed,))
+    s = reports.summary(conn, None, "accrual")
+    assert "Disputed / Fraud" not in by_name(s.expenses)
+    # Card payments still pay off the real charges (H-E-B, Netflix), not the disputed one.
+    payments = reports.card_ledger(conn, reports.income_account_id(conn))
+    allocated = {}
+    for p in payments.values():
+        for name, cents in p.allocations:
+            allocated[name] = allocated.get(name, 0) + cents
+    assert allocated == {"Groceries": 4000, "Subscriptions": 6000}
