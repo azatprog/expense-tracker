@@ -21,6 +21,7 @@ Supported statements (type is auto-detected):
 
 The first run creates `.venv` and installs `requirements.txt`. `PORT=9000 ./run.sh` uses another
 port; `./run.sh --reload` restarts on code changes.
+Stop it with Ctrl+C, or `./stop.sh` from any terminal (`PORT=9000 ./stop.sh` for another port).
 
 Open http://127.0.0.1:8765, upload statements, then pick your income account on **Accounts**
 (the first bank account uploaded is picked automatically).

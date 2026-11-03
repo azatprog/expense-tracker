@@ -9,6 +9,7 @@ dtfsoft / NestShipper / printnest products in `~/workspace`.
 
 ```bash
 ./run.sh                                   # http://127.0.0.1:8765 (creates .venv on first run)
+./stop.sh                                  # stops it (only the app's uvicorn, not other programs on the port)
 .venv/bin/python -m pytest -q              # all tests; must pass before committing
 .venv/bin/python -m app.cli check  <pdf>…  # parse only: transactions + totals check, no DB writes
 .venv/bin/python -m app.cli import <pdf>…  # add to data/expenses.db (same as the Upload page)
