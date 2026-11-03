@@ -8,7 +8,8 @@ DISPUTED = "Disputed / Fraud"                    # a charge and its refund, set 
 
 CATEGORIES = {
     "income": ["Salary", "Zelle Received", "Rewards & Cashback", "Other Income"],
-    "transfer": [CARD_PAYMENT, CARD_PAYMENT_RECEIVED, "Transfer", DISPUTED],
+    # Loans: money lent out and paid back; neither is spending or income.
+    "transfer": [CARD_PAYMENT, CARD_PAYMENT_RECEIVED, "Transfer", DISPUTED, "Loans"],
     "expense": [
         "Groceries", "Dining", "Amazon", "Shopping", "Clothing", "Electronics",
         "Rent", "Utilities", "Phone & Internet", "Home Services",
