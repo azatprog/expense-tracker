@@ -174,3 +174,18 @@ def test_rules_match_from_the_start_of_a_word(conn, description, category):
     ids = categorize.category_ids(conn)
     got = categorize.categorize(description, -100, False, categorize.load_rules(conn), ids)
     assert got == ids[category]
+
+
+def test_grouped_categories_show_as_one_line_with_children(conn):
+    load(conn, BOA_CHECKING, AMEX, APPLE_CARD, BOA_CREDIT)
+    conn.executemany("UPDATE categories SET grp = 'Food & shopping' WHERE name = ?",
+                     [("Groceries",), ("Amazon",), ("Clothing",)])
+    s = reports.summary(conn, "2026-10", "cash")
+    flat = by_name(s.expenses)
+    grouped = reports.group_categories(conn, s.expenses)
+    names = [c.name for c in grouped]
+    assert "Food & shopping" in names and "Groceries" not in names and "Amazon" not in names
+    group = next(c for c in grouped if c.name == "Food & shopping")
+    assert {c.name for c in group.children} == {"Groceries", "Amazon", "Clothing"}
+    assert group.total_cents == flat["Groceries"] + flat["Amazon"] + flat["Clothing"]
+    assert sum(c.total_cents for c in grouped) == s.expense_cents   # nothing lost or double counted

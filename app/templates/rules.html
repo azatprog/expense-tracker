@@ -38,5 +38,32 @@
   <p class="sub">Transfer categories are left out of income and expenses. “Credit Card Payment” on the income
     account is what gets split into the card's categories.</p>
 </section>
+
+<section class="card" id="groups">
+  <h2>Groups</h2>
+  <p class="sub">A group shows several expense categories as one line on the dashboard; click it to see them
+    separately. Saving a group with the same name replaces its categories.</p>
+  {% set groups = {} %}
+  {% for c in categories if c.grp %}{% set _ = groups.setdefault(c.grp, []).append(c.name) %}{% endfor %}
+  {% for g, members in groups | dictsort %}
+    <form method="post" action="/groups/delete" class="group-row">
+      <strong>{{ g }}</strong> <span class="sub">{{ members | join(' + ') }}</span>
+      <input type="hidden" name="name" value="{{ g }}">
+      <button class="btn small" type="submit">Ungroup</button>
+    </form>
+  {% else %}<p class="sub">No groups yet.</p>{% endfor %}
+  <form method="post" action="/groups">
+    <label class="filters">Group name <input name="name" required placeholder="e.g. Groceries, shopping & dining"
+      list="group-names"></label>
+    <datalist id="group-names">{% for g in groups %}<option value="{{ g }}">{% endfor %}</datalist>
+    <div class="checks">
+      {% for c in categories if c.kind == 'expense' %}
+        <label><input type="checkbox" name="categories" value="{{ c.name }}"> {{ c.name }}
+          {% if c.grp %}<span class="sub">({{ c.grp }})</span>{% endif %}</label>
+      {% endfor %}
+    </div>
+    <button class="btn primary" type="submit">Save group</button>
+  </form>
+</section>
 </div>
 {% endblock %}

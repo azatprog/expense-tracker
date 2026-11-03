@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS statements (
 CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    kind TEXT NOT NULL                 -- income | expense | transfer
+    kind TEXT NOT NULL,                -- income | expense | transfer
+    grp TEXT                           -- optional group shown as one line on the dashboard
 );
 
 CREATE TABLE IF NOT EXISTS rules (
@@ -98,3 +99,6 @@ def migrate(conn: sqlite3.Connection) -> None:
     columns = {r["name"] for r in conn.execute("PRAGMA table_info(budget_lines)")}
     if "categories" not in columns:
         conn.execute("ALTER TABLE budget_lines ADD COLUMN categories TEXT NOT NULL DEFAULT ''")
+    columns = {r["name"] for r in conn.execute("PRAGMA table_info(categories)")}
+    if "grp" not in columns:
+        conn.execute("ALTER TABLE categories ADD COLUMN grp TEXT")

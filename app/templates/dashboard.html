@@ -75,21 +75,27 @@
 <div class="grid">
   <section class="card">
     <h2>Expenses</h2>
-    {% for c in s.expenses %}
-      <details class="cat">
+    {% macro category(c) %}
+      <details class="cat{{ ' group' if c.children }}">
         <summary>
           <span class="name">{{ c.name }}</span>
+          {% if c.children %}<span class="tag">{{ c.children | length }} categories</span>{% endif %}
           {% if c.via_cards_cents %}<span class="tag">{{ c.via_cards_cents | money }} via cards</span>{% endif %}
           <span class="amt">{{ c.total_cents | money }}</span>
         </summary>
+        {% if c.children %}
+          <div class="children">{% for child in c.children %}{{ category(child) }}{% endfor %}</div>
+        {% else %}
         <table class="compact">
           {% for i in c.items %}
             <tr><td class="date">{{ i.date }}</td><td>{{ i.merchant }}<div class="sub">{{ i.via or i.account }}</div></td>
               <td class="num">{{ i.amount_cents | money }}</td></tr>
           {% endfor %}
         </table>
+        {% endif %}
       </details>
-    {% else %}<p class="sub">No expenses in this period.</p>{% endfor %}
+    {% endmacro %}
+    {% for c in s.expenses %}{{ category(c) }}{% else %}<p class="sub">No expenses in this period.</p>{% endfor %}
   </section>
 
   <div>

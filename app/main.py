@@ -52,6 +52,7 @@ def dashboard(request: Request, month: str | None = None, view: str = "cash", co
     if month == "all":
         month = None
     s = reports.summary(conn, month, view)
+    s.expenses = reports.group_categories(conn, s.expenses)
     return templates.TemplateResponse(request, "dashboard.html", {
         "s": s,
         "months": months,
@@ -246,6 +247,24 @@ def delete_rule(rule_id: int, conn=Depends(get_conn)):
 def reapply_rules(conn=Depends(get_conn)):
     categorize.reapply(conn)
     return back("/rules")
+
+
+@app.post("/groups")
+async def save_group(request: Request, conn=Depends(get_conn)):
+    form = await request.form()
+    name, members = form["name"].strip(), form.getlist("categories")
+    if name:
+        conn.execute("UPDATE categories SET grp = NULL WHERE grp = ?", (name,))
+        conn.executemany("UPDATE categories SET grp = ? WHERE name = ?", [(name, m) for m in members])
+        conn.commit()
+    return back("/rules#groups")
+
+
+@app.post("/groups/delete")
+def delete_group(name: str = Form(...), conn=Depends(get_conn)):
+    conn.execute("UPDATE categories SET grp = NULL WHERE grp = ?", (name,))
+    conn.commit()
+    return back("/rules#groups")
 
 
 @app.post("/categories")
