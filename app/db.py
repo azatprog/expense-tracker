@@ -42,6 +42,16 @@ CREATE TABLE IF NOT EXISTS rules (
     UNIQUE (pattern)
 );
 
+CREATE TABLE IF NOT EXISTS budget_lines (
+    id INTEGER PRIMARY KEY,
+    month TEXT NOT NULL,               -- YYYY-MM
+    kind TEXT NOT NULL,                -- income | expense
+    name TEXT NOT NULL,                -- usually a category name, can be anything
+    amount_cents INTEGER NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS ix_budget_month ON budget_lines(month);
+
 CREATE TABLE IF NOT EXISTS seeded_rules (
     pattern TEXT PRIMARY KEY           -- default rules already offered to this database
 );

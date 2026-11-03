@@ -152,6 +152,6 @@
     view: {{ view | tojson }},
   };
 </script>
-<script src="/static/dashboard.js"></script>
+<script src="{{ static('dashboard.js') }}"></script>
 {% endif %}
 {% endblock %}
