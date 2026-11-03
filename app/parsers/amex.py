@@ -2,7 +2,7 @@
 import re
 from datetime import timedelta
 
-from .common import AMOUNT_RE, ParsedStatement, ParsedTxn, cents, parse_date
+from .common import AMOUNT_RE, ParsedStatement, ParsedTxn, cents, compare_totals, parse_date, printed_total
 
 TXN_RE = re.compile(rf"^(\d{{2}}/\d{{2}}/\d{{2}})\*?\s+(.+?)\s+({AMOUNT_RE})$")
 SECTIONS = {
@@ -73,3 +73,11 @@ def parse(text: str) -> ParsedStatement:
         elif current is not None and not PHONE_RE.match(line):
             current.description += " " + line
     return stmt
+
+
+def check(text: str, stmt: ParsedStatement) -> list[str]:
+    parts = [printed_total(text, label) for label in ("Plus New Charges", "Plus Fees", "Plus I ?nterest Charged")]
+    return compare_totals([
+        ("Payments and credits", printed_total(text, "Less Payments/Credits"), stmt.credits()),
+        ("New charges + fees + interest", None if None in parts else sum(parts), stmt.debits()),
+    ])

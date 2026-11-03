@@ -2,7 +2,7 @@
 import re
 from datetime import datetime
 
-from .common import AMOUNT_RE, ParsedStatement, ParsedTxn, cents
+from .common import AMOUNT_RE, ParsedStatement, ParsedTxn, cents, compare_totals, printed_total
 
 PAYMENT_RE = re.compile(rf"^(\d{{2}}/\d{{2}}/\d{{4}})\s+(.+?)\s+({AMOUNT_RE})$")
 # "<date> <merchant+address> <n>% $<daily cash> $<amount>"
@@ -92,3 +92,15 @@ def parse(text: str) -> ParsedStatement:
                 ))
                 pending_installment = None
     return stmt
+
+
+def check(text: str, stmt: ParsedStatement) -> list[str]:
+    payments = sum(t.amount_cents for t in stmt.transactions if t.is_card_payment)
+    # "Total charges, credits and returns" covers the Transactions table only, not installments.
+    net_charges = -sum(t.amount_cents for t in stmt.transactions
+                       if not t.is_card_payment and not t.description.startswith("Installment: "))
+    has_payments = re.search(r"^Payments$", text, re.M)
+    return compare_totals([
+        ("Payments", printed_total(text, "Total payments for this period") if has_payments else 0, payments),
+        ("Charges, credits and returns", printed_total(text, "Total charges, credits and returns"), net_charges),
+    ])

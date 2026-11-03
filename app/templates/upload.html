@@ -15,7 +15,11 @@
   {% if results %}
     <ul class="results">
       {% for r in results %}
-        <li class="{{ r.status }}"><strong>{{ r.file_name }}</strong> — {{ r.status }}: {{ r.message }}</li>
+        <li class="{{ 'error' if r.warnings else r.status }}"><strong>{{ r.file_name }}</strong> — {{ r.status }}: {{ r.message }}
+          {% for w in r.warnings %}<div>⚠ {{ w }}</div>{% endfor %}
+          {% if r.warnings %}<div class="sub">The statement was imported anyway. Totals won't match it until the parser is fixed;
+            you can delete it on the Accounts page.</div>{% endif %}
+        </li>
       {% endfor %}
     </ul>
     <p><a class="btn" href="/">Go to dashboard</a> <a class="btn" href="/transactions">Review transactions</a></p>

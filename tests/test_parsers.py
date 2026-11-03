@@ -7,6 +7,8 @@ from app.parsers.common import cents
 
 from .fixtures import AMEX, APPLE_CARD, BOA_CHECKING, BOA_CREDIT
 
+ALL = [BOA_CHECKING, APPLE_CARD, AMEX, BOA_CREDIT]
+
 
 def amounts(stmt):
     return [t.amount_cents for t in stmt.transactions]
@@ -75,3 +77,20 @@ def test_cents(text, expected):
 ])
 def test_merchant_name(desc, expected):
     assert merchant_name(desc) == expected
+
+
+@pytest.mark.parametrize("text", ALL)
+def test_parsed_totals_match_printed_totals(text):
+    assert parse_text(text).warnings == []
+
+
+def test_skipped_line_is_flagged():
+    # A check (section the parser doesn't read) makes the withdrawals total disagree.
+    text = BOA_CHECKING.replace("Checks -0.00", "Checks -500.00")
+    [warning] = parse_text(text).warnings
+    assert "Withdrawals" in warning and "off by $500.00" in warning
+
+
+def test_missing_printed_total_is_flagged():
+    text = AMEX.replace("Less Payments/Credits $100.00\n", "")
+    assert parse_text(text).warnings == ["Couldn't find the printed total for Payments and credits"]

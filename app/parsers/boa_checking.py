@@ -1,7 +1,7 @@
 """Bank of America checking/debit eStatement (eStmt_YYYY-MM-DD.pdf)."""
 import re
 
-from .common import AMOUNT_RE, ParsedStatement, ParsedTxn, cents, parse_date
+from .common import AMOUNT_RE, ParsedStatement, ParsedTxn, cents, compare_totals, parse_date, printed_total
 
 SECTIONS = {
     "Deposits and other additions": +1,
@@ -63,3 +63,13 @@ def parse(text: str) -> ParsedStatement:
         elif current is not None and line:
             current.description += " " + line
     return stmt
+
+
+def check(text: str, stmt: ParsedStatement) -> list[str]:
+    parts = [printed_total(text, label) for label in
+             ("ATM and debit card subtractions", "Other subtractions", "Checks", "Service fees")]
+    return compare_totals([
+        ("Deposits and other additions", printed_total(text, "Deposits and other additions"), stmt.credits()),
+        ("Withdrawals (debit card + other + checks + fees)",
+         None if None in parts else sum(parts), stmt.debits()),
+    ])

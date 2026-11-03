@@ -5,6 +5,11 @@ BOA_CHECKING = """\
 Bank of America, N.A.
 for September 26, 2026 to October 27, 2026 Account number: 1111 2222 3333
 Ending balance on October 27, 2026 $1,000.00
+Deposits and other additions 3,012.11
+ATM and debit card subtractions -30.97
+Other subtractions -2,270.00
+Checks -0.00
+Service fees -0.00
 JANE DOE ! Account # 1111 2222 3333 ! September 26, 2026 to October 27, 2026
 Deposits and other additions
 Date Description Amount
@@ -54,6 +59,7 @@ Date Description Daily Cash Amount
 3% Daily Cash at Uber 1% $0.50
 09/06/2026 HOUSE OF SPORT RETURN 24600 Katy Fwy Katy 77494 TX USA 2% -$0.10 -$5.00
 Total Daily Cash this month $1.30
+Total charges, credits and returns $65.00
 Apple Card Monthly Installments
 Dates Description Daily Cash Amounts
 07/24/2026 Apple Store SUGAR LAND TX $609.00
@@ -71,6 +77,10 @@ JANE DOE
 Account Ending 1-23456
 Closing Date 10/07/26
 New Balance $150.00
+Less Payments/Credits $100.00
+Plus New Charges $160.00
+Plus Fees $0.00
+Plus I nterest Charged $0.00
 Payments Details
 *Indicates posting date
 JANE DOE
@@ -107,6 +117,10 @@ Bank of America
 Account# 4444 5555 6666 9999
 September 9 - October 8, 2026
 New Balance Total $40.00
+Payments and Other Credits -$100.00
+Purchases and Adjustments $40.00
+Fees Charged $0.00
+Interest Charged $0.00
 Transactions
 Payments and Other Credits
 10/05 10/05 PAYMENT FROM CHK 3333 CONF#zpx5zkqlm 4966 9999 -100.00

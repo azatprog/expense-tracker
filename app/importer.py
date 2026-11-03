@@ -1,6 +1,6 @@
 import hashlib
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from . import categorize
 from .parsers import ParsedStatement, merchant_name, parse_pdf
@@ -12,6 +12,7 @@ class ImportResult:
     status: str            # imported | duplicate | error
     message: str
     statement_id: int | None = None
+    warnings: list[str] = field(default_factory=list)
 
 
 def import_pdf(conn: sqlite3.Connection, file_name: str, data: bytes) -> ImportResult:
@@ -57,6 +58,7 @@ def save(conn: sqlite3.Connection, file_name: str, sha: str, parsed: ParsedState
         f"{parsed.account_name} · {parsed.period_start:%b %d} – {parsed.period_end:%b %d, %Y} · "
         f"{len(parsed.transactions)} transactions",
         statement_id,
+        parsed.warnings,
     )
 
 
