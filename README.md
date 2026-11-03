@@ -26,6 +26,17 @@ Open http://127.0.0.1:8765, upload statements, then pick your income account on 
 Data lives in `data/expenses.db` (SQLite, git-ignored). Set `EXPENSE_DB=/path/to.db` to use another file.
 Statements are parsed in memory and not stored.
 
+## Checking a statement parsed completely
+
+Every import compares the parsed transactions with the totals printed on the statement
+(deposits/withdrawals, payments/charges, fees, interest). A mismatch means some lines were not
+read; it is shown on the Upload page and the statement is still imported. From the command line:
+
+```bash
+.venv/bin/python -m app.cli check  path/to/statement.pdf   # parse only, list transactions + totals check
+.venv/bin/python -m app.cli import path/to/statement.pdf   # add to the database
+```
+
 ## How the join works
 
 1. Each bank-side transaction categorized **Credit Card Payment** is linked to a card account by

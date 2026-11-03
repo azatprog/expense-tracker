@@ -2,7 +2,7 @@
 import re
 from datetime import date
 
-from .common import AMOUNT_RE, ParsedStatement, ParsedTxn, cents, parse_date
+from .common import AMOUNT_RE, ParsedStatement, ParsedTxn, cents, compare_totals, parse_date, printed_total
 
 # "09/16 09/18 AMAZON MKTPLACE PMTS AMZN.COM/BILL WA 2469216ABCDEF 5646 43.21"
 TXN_RE = re.compile(rf"^(\d{{2}}/\d{{2}})\s+\d{{2}}/\d{{2}}\s+(.+?)\s+({AMOUNT_RE})$")
@@ -66,3 +66,11 @@ def parse(text: str) -> ParsedStatement:
             is_card_payment=section == "payments" and "PAYMENT" in desc.upper(),
         ))
     return stmt
+
+
+def check(text: str, stmt: ParsedStatement) -> list[str]:
+    parts = [printed_total(text, label) for label in ("Purchases and Adjustments", "Fees Charged", "Interest Charged")]
+    return compare_totals([
+        ("Payments and other credits", printed_total(text, "Payments and Other Credits"), stmt.credits()),
+        ("Purchases + fees + interest", None if None in parts else sum(parts), stmt.debits()),
+    ])

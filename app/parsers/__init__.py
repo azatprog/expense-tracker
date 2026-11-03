@@ -19,7 +19,9 @@ def pdf_text(data: bytes) -> str:
 def parse_text(text: str) -> ParsedStatement:
     for parser in PARSERS:
         if parser.matches(text):
-            return parser.parse(text)
+            stmt = parser.parse(text)
+            stmt.warnings = parser.check(text, stmt)
+            return stmt
     raise ValueError("Unrecognized statement: expected Bank of America, Apple Card or American Express")
 
 

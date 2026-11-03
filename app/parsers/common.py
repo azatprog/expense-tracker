@@ -23,6 +23,13 @@ class ParsedStatement:
     period_end: date
     balance_cents: int | None
     transactions: list[ParsedTxn] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)   # parsed totals that disagree with the PDF
+
+    def credits(self) -> int:
+        return sum(t.amount_cents for t in self.transactions if t.amount_cents > 0)
+
+    def debits(self) -> int:
+        return -sum(t.amount_cents for t in self.transactions if t.amount_cents < 0)
 
 
 def cents(text: str) -> int:
@@ -33,6 +40,24 @@ def cents(text: str) -> int:
     whole, frac = t.split(".")
     value = int(whole or 0) * 100 + int(frac)
     return -value if neg else value
+
+
+def printed_total(text: str, label: str) -> int | None:
+    """Absolute cents of the first summary line '<label> <amount>' (label is a regex)."""
+    m = re.search(rf"^{label}\s+({AMOUNT_RE})\s*$", text, re.M)
+    return abs(cents(m.group(1))) if m else None
+
+
+def compare_totals(rows: list[tuple[str, int | None, int]]) -> list[str]:
+    """rows of (what, printed on the statement, sum of parsed transactions) -> warnings."""
+    out = []
+    for what, printed, parsed in rows:
+        if printed is None:
+            out.append(f"Couldn't find the printed total for {what}")
+        elif printed != parsed:
+            out.append(f"{what}: statement says ${printed / 100:,.2f}, parsed ${parsed / 100:,.2f} "
+                       f"(off by ${(printed - parsed) / 100:,.2f}) — some lines were not read")
+    return out
 
 
 def parse_date(text: str, fmt: str) -> date:
